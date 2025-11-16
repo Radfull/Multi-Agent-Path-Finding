@@ -19,35 +19,34 @@ def main():
     for d in dists:
         print(f'min_time ({d}): {len(eval_env4(used_dist=d))}')
 
-
 # 1 env
 # min_time (manh): 27
-# min_time (euclid): 37
-# min_time (cheb): 24
-# min_time (octile): 20
-# min_time (mixed): 18
-# min_time (weighted): 15
+# min_time (euclid): 27
+# min_time (cheb): 28
+# min_time (octile): 27
+# min_time (mixed): 27
+# min_time (weighted): 27
 # 2 env
-# min_time (manh) : 11
-# min_time (euclid) : 19
-# min_time (cheb) : 30
-# min_time (octile) : 36
-# min_time (mixed) : 29
-# min_time (weighted) : 22
+# min_time (manh) : 51
+# min_time (euclid) : 43
+# min_time (cheb) : 45
+# min_time (octile) : 43
+# min_time (mixed) : 51
+# min_time (weighted) : 43
 # 3 env
-# min_time (manh): 137
-# min_time (euclid): 121
-# min_time (cheb): 118
-# min_time (octile): 114
-# min_time (mixed): 136
-# min_time (weighted): 114
+# min_time (manh): 114
+# min_time (euclid): 107
+# min_time (cheb): 103
+# min_time (octile): 103
+# min_time (mixed): 114
+# min_time (weighted): 103
 # 4 env
-# min_time (manh): 140
-# min_time (euclid): 92
-# min_time (cheb): 105
-# min_time (octile): 116
-# min_time (mixed): 132
-# min_time (weighted): 130
+# min_time (manh): 143
+# min_time (euclid): 134
+# min_time (cheb): 131
+# min_time (octile): 128
+# min_time (mixed): 143
+# min_time (weighted): 128
 
 if __name__ == "__main__":
     main()

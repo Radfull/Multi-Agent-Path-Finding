@@ -1,12 +1,12 @@
 import random
 from solver.phans_null_agent_swapping import PHANS
 
-random.seed(168)
 
-def eval_env1(plot:bool = False, used_dist:str = 'manh'):                
+def eval_env1(plot:bool = False, used_dist:str = 'manh', seed = 168):                
     # --------------------------
     # problem definition
     # --------------------------
+    random.seed(seed)
     size_x = 14
     size_y = 7
     
@@ -37,10 +37,11 @@ def eval_env1(plot:bool = False, used_dist:str = 'manh'):
 
     return all_path_lst
 
-def eval_env2(plot:bool = False, used_dist:str = 'manh'):                
+def eval_env2(plot:bool = False, used_dist:str = 'manh', seed = 168):                
     # --------------------------
     # problem definition
     # --------------------------
+    random.seed(seed)
     size_x = 14
     size_y = 7
     
@@ -76,10 +77,11 @@ def eval_env2(plot:bool = False, used_dist:str = 'manh'):
     return all_path_lst
 
 
-def eval_env3(plot:bool = False, used_dist:str = 'manh'):                
+def eval_env3(plot:bool = False, used_dist:str = 'manh',seed = 168):                
     # --------------------------
     # problem definition
     # --------------------------
+    random.seed(seed)
     size_x = 35
     size_y = 21
     
@@ -123,10 +125,11 @@ def eval_env3(plot:bool = False, used_dist:str = 'manh'):
 
     return all_path_lst
 
-def eval_env4(plot:bool = False, used_dist:str = 'manh'):                
+def eval_env4(plot:bool = False, used_dist:str = 'manh', seed = 168):                
     # --------------------------
     # problem definition
     # --------------------------
+    random.seed(seed)
     size_x = 35
     size_y = 21
 
