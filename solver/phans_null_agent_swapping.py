@@ -139,7 +139,9 @@ class PHANS:
                 agent_start_pos_lst=self.ag_start_pos_lst,
                 null_agent_pos_lst=self.null_ag_pos_lst,
                 considering_cycle_conflict=False,
-                used_dist = self.used_dist
+                used_dist = self.used_dist,
+                weight=1.0
+            
             )
             solution = env.compute_solution()
 
@@ -466,7 +468,8 @@ class PHANS:
                     moving_obstacle_edges=[],
                     a_star_max_iter=10000,
                     is_dst_add=False,
-                    used_dist = self.used_dist
+                    used_dist = self.used_dist,
+                    weight=1.0
                 )
                 solution = env.compute_solution()
                 mov_obss += [(s["x"], s["y"], s["t"]) for s in solution]
