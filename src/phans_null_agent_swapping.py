@@ -6,6 +6,7 @@ from matplotlib.animation import PillowWriter
 import numpy as np
 
 from src.search_algorithms.a_star import AStarFollowingConflict
+from src.search_algorithms.focal_search import FocalSearchFollowingConflict
 
 
 class PHANS:
@@ -14,7 +15,9 @@ class PHANS:
         size_x: int, 
         size_y: int, 
         static_obstacles: list[tuple[int, int]] = None,
-        used_dist:str = 'euclid'
+        used_dist:str = 'euclid',
+        search_type: str = 'a_star',  # 'a_star' or 'focal'
+        focal_weight: float = 1.5     # Weight for focal search suboptimality bound
     ):
         """
         A grid environment where multiple agents move while avoiding static and
@@ -34,6 +37,8 @@ class PHANS:
         self.size_y = size_y
         self.static_obss = static_obstacles
         self.used_dist = used_dist
+        self.search_type = search_type
+        self.focal_weight = focal_weight
 
         self.ag_start_pos_lst = []
         self.ag_cur_pos_lst = []
@@ -80,6 +85,29 @@ class PHANS:
             == len(self.tgt_ag_path_lst[i_tgt_ag]) - 1
         ]
 
+    def _create_search_algorithm(self, ag: dict, obstacles: set, moving_obstacles: list, 
+                               moving_obstacle_edges: list, a_star_max_iter: int) -> object:
+        """Create the appropriate search algorithm instance based on search_type."""
+        common_args = {
+            "dimension": (self.size_x, self.size_y),
+            "agent": ag,
+            "obstacles": obstacles,
+            "moving_obstacles": moving_obstacles,
+            "moving_obstacle_edges": moving_obstacle_edges,
+            "agent_start_pos_lst": self.ag_start_pos_lst,
+            "null_agent_pos_lst": self.null_ag_pos_lst,
+            "considering_cycle_conflict": False,
+            "used_dist": self.used_dist
+        }
+        
+        if self.search_type == 'focal':
+            common_args["focal_max_iter"] = a_star_max_iter
+            return FocalSearchFollowingConflict(**common_args, w=self.focal_weight)
+        else:
+            common_args["a_star_max_iter"] = a_star_max_iter
+            return AStarFollowingConflict(**common_args)
+        
+        
     def _is_num_of_obs_agents_on_path_increased(self) -> bool:
         """
         Check whether the number of obstructing agents along each target path
@@ -129,17 +157,12 @@ class PHANS:
                 if a != ag
             ]
             other_ag_goals = [a["goal"] for a in ags if a != ag]
-            env = AStarFollowingConflict(
-                dimension,
-                ag,
-                set(self.static_obss + other_ag_goals),
+            env = self._create_search_algorithm(
+                ag=ag,
+                obstacles=set(self.static_obss + other_ag_goals),
                 moving_obstacles=mov_obss + other_ag_starts_moc_obss,
                 moving_obstacle_edges=mov_obss_edges,
-                a_star_max_iter=a_star_max_iter,
-                agent_start_pos_lst=self.ag_start_pos_lst,
-                null_agent_pos_lst=self.null_ag_pos_lst,
-                considering_cycle_conflict=False,
-                used_dist = self.used_dist
+                a_star_max_iter=a_star_max_iter
             )
             solution = env.compute_solution()
 
@@ -458,16 +481,14 @@ class PHANS:
                             ]
                         ]
 
-                env = AStarFollowingConflict(
-                    dimension,
-                    ag,
-                    set(obss + tgt_preserved_pos),
+                env = self._create_search_algorithm(
+                    ag=ag,
+                    obstacles=set(obss + tgt_preserved_pos),
                     moving_obstacles=mov_obss,
                     moving_obstacle_edges=[],
-                    a_star_max_iter=10000,
-                    is_dst_add=False,
-                    used_dist = self.used_dist
+                    a_star_max_iter=10000
                 )
+                env.is_dst_add = False 
                 solution = env.compute_solution()
                 mov_obss += [(s["x"], s["y"], s["t"]) for s in solution]
                 solution_dict_all.append(solution)

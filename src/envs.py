@@ -25,7 +25,7 @@ def eval_env1(plot:bool = False, used_dist:str = 'manh', seed = 168):
     # --------------------------
     # Run
     # --------------------------
-    problem = PHANS(size_x, size_y, static_obstacles=static_obss, used_dist = used_dist)
+    problem = PHANS(size_x, size_y, static_obstacles=static_obss, used_dist = used_dist, search_type='focal')
     all_path_lst = problem.run_loop(ag_start_pos_lst, task_lst)
     
     # --------------------------
@@ -178,7 +178,7 @@ def eval_env4(plot:bool = False, used_dist:str = 'manh', seed = 168):
     # --------------------------
     # Run
     # --------------------------
-    problem = PHANS(size_x, size_y, static_obstacles=static_obss, used_dist=used_dist)
+    problem = PHANS(size_x, size_y, static_obstacles=static_obss, used_dist=used_dist, search_type='a_star')
     all_path_lst = problem.run_loop(ag_start_pos_lst, task_lst)
     
     # --------------------------

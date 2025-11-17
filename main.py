@@ -1,32 +1,41 @@
 from src.envs import eval_env1, eval_env2, eval_env3, eval_env4
-
+import time
 
 def main():
     dists = ['manh', 'euclid', 'cheb','octile', 'mixed', 'weighted']
     best_counts = [0] * 6
+    best_times = [0] * 6
     print('1 env')
-
+    start_time = time.time()
     for s in range(1,11):
         print(str(s) + " / 10")
-        times = []
+        steps, times = [], []
         for d in dists:
-            times.append(eval_env1(used_dist=d, seed=s))
-        m = min(times)
+            st = time.time()
+            steps.append(len(eval_env1(used_dist=d, seed=s, plot=False)))
+            times.append(round(time.time()-st,2))
+        m = min(steps)
+        m_t = min(times)
+        print(m)
         for i in range(6):
-            if times[i] == m:
+            if steps[i] == m:
                 best_counts[i] += 1
-            
+            if times[i] == m_t:
+                best_times[i] += 1
+    
+    print(time.time() - start_time)
     print(best_counts)
+    print(best_times)
 
-    # print('1 env') # [31, 44, 48, 46, 31, 46] для 100 тестов сиды 1-100
+    # print('1 env') #  для 100 тестов сиды 1-100
     # for d in dists:
     #     print(f'min_time ({d}) : {len(eval_env1(used_dist=d))}')
 
-    # print('2 env') # [37, 49, 47, 48, 37, 48] для 100 тестов сиды 1-100
+    # print('2 env') #  для 100 тестов сиды 1-100
     # for d in dists:
     #     print(f'min_time ({d}) : {len(eval_env2(used_dist=d))}')
 
-    # print('3 env') # [6, 0, 3, 1, 6, 1] для 10 тестов сиды 1-10
+    # print('3 env') #  для 10 тестов сиды 1-10
     # for d in dists:
     #     print(f'min_time ({d}): {len(eval_env3(used_dist=d))}')
 
