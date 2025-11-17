@@ -199,6 +199,13 @@ class AStarFollowingConflict():
         dy = abs(state.location.y - goal.location.y)
         return max(dx, dy) + (sqrt(2) - 1) * min(dx, dy)
     
+    def __diagonal_dist(self, state: State, goal):
+        dx = abs(state.location.x - goal.location.x)
+        dy = abs(state.location.y - goal.location.y)
+        D = 1.0  # стоимость диагонального движения
+        D2 = sqrt(2)  # стоимость диагонального движения (точная)
+        return D * (dx + dy) + (D2 - 2 * D) * min(dx, dy)
+    
     def __mixed_max(self, state:State, goal):
         return max(self.__manhattan_dist(state, goal), self.__chebyshev_dist(state, goal))
     
@@ -217,6 +224,8 @@ class AStarFollowingConflict():
             return self.__mixed_max(state, goal)
         elif self.used_dist == 'weighted':
             return self.__weighted_mixed(state, goal)
+        elif self.used_dist == 'diagonal':
+            return self.__diagonal_dist(state, goal)
         else:
             return self.__manhattan_dist(state, goal)
             

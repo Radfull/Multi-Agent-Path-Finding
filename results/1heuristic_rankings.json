@@ -1,0 +1,1027 @@
+{
+  "rankings": {
+    "env1": [
+      {
+        "seed": 168,
+        "ranking": [
+          {
+            "dist": "manh",
+            "place": 1,
+            "value": 27
+          },
+          {
+            "dist": "euclid",
+            "place": 1,
+            "value": 27
+          },
+          {
+            "dist": "octile",
+            "place": 1,
+            "value": 27
+          },
+          {
+            "dist": "mixed",
+            "place": 1,
+            "value": 27
+          },
+          {
+            "dist": "weighted",
+            "place": 1,
+            "value": 27
+          },
+          {
+            "dist": "diagonal",
+            "place": 1,
+            "value": 27
+          },
+          {
+            "dist": "cheb",
+            "place": 7,
+            "value": 28
+          }
+        ]
+      },
+      {
+        "seed": 169,
+        "ranking": [
+          {
+            "dist": "manh",
+            "place": 1,
+            "value": 12
+          },
+          {
+            "dist": "mixed",
+            "place": 1,
+            "value": 12
+          },
+          {
+            "dist": "cheb",
+            "place": 3,
+            "value": 14
+          },
+          {
+            "dist": "euclid",
+            "place": 4,
+            "value": 16
+          },
+          {
+            "dist": "octile",
+            "place": 4,
+            "value": 16
+          },
+          {
+            "dist": "weighted",
+            "place": 4,
+            "value": 16
+          },
+          {
+            "dist": "diagonal",
+            "place": 4,
+            "value": 16
+          }
+        ]
+      },
+      {
+        "seed": 170,
+        "ranking": [
+          {
+            "dist": "euclid",
+            "place": 1,
+            "value": 12
+          },
+          {
+            "dist": "cheb",
+            "place": 1,
+            "value": 12
+          },
+          {
+            "dist": "octile",
+            "place": 1,
+            "value": 12
+          },
+          {
+            "dist": "weighted",
+            "place": 1,
+            "value": 12
+          },
+          {
+            "dist": "diagonal",
+            "place": 1,
+            "value": 12
+          },
+          {
+            "dist": "manh",
+            "place": 6,
+            "value": 14
+          },
+          {
+            "dist": "mixed",
+            "place": 6,
+            "value": 14
+          }
+        ]
+      },
+      {
+        "seed": 171,
+        "ranking": [
+          {
+            "dist": "octile",
+            "place": 1,
+            "value": 26
+          },
+          {
+            "dist": "weighted",
+            "place": 1,
+            "value": 26
+          },
+          {
+            "dist": "diagonal",
+            "place": 1,
+            "value": 26
+          },
+          {
+            "dist": "cheb",
+            "place": 4,
+            "value": 27
+          },
+          {
+            "dist": "euclid",
+            "place": 5,
+            "value": 28
+          },
+          {
+            "dist": "manh",
+            "place": 6,
+            "value": 31
+          },
+          {
+            "dist": "mixed",
+            "place": 6,
+            "value": 31
+          }
+        ]
+      },
+      {
+        "seed": 172,
+        "ranking": [
+          {
+            "dist": "manh",
+            "place": 1,
+            "value": 23
+          },
+          {
+            "dist": "mixed",
+            "place": 1,
+            "value": 23
+          },
+          {
+            "dist": "cheb",
+            "place": 3,
+            "value": 24
+          },
+          {
+            "dist": "euclid",
+            "place": 4,
+            "value": 25
+          },
+          {
+            "dist": "octile",
+            "place": 4,
+            "value": 25
+          },
+          {
+            "dist": "weighted",
+            "place": 4,
+            "value": 25
+          },
+          {
+            "dist": "diagonal",
+            "place": 4,
+            "value": 25
+          }
+        ]
+      },
+      {
+        "seed": 173,
+        "ranking": [
+          {
+            "dist": "euclid",
+            "place": 1,
+            "value": 30
+          },
+          {
+            "dist": "cheb",
+            "place": 1,
+            "value": 30
+          },
+          {
+            "dist": "octile",
+            "place": 1,
+            "value": 30
+          },
+          {
+            "dist": "weighted",
+            "place": 1,
+            "value": 30
+          },
+          {
+            "dist": "diagonal",
+            "place": 1,
+            "value": 30
+          },
+          {
+            "dist": "manh",
+            "place": 6,
+            "value": 36
+          },
+          {
+            "dist": "mixed",
+            "place": 6,
+            "value": 36
+          }
+        ]
+      }
+    ],
+    "env2": [
+      {
+        "seed": 168,
+        "ranking": [
+          {
+            "dist": "euclid",
+            "place": 1,
+            "value": 43
+          },
+          {
+            "dist": "octile",
+            "place": 1,
+            "value": 43
+          },
+          {
+            "dist": "weighted",
+            "place": 1,
+            "value": 43
+          },
+          {
+            "dist": "diagonal",
+            "place": 1,
+            "value": 43
+          },
+          {
+            "dist": "cheb",
+            "place": 5,
+            "value": 45
+          },
+          {
+            "dist": "manh",
+            "place": 6,
+            "value": 51
+          },
+          {
+            "dist": "mixed",
+            "place": 6,
+            "value": 51
+          }
+        ]
+      },
+      {
+        "seed": 169,
+        "ranking": [
+          {
+            "dist": "cheb",
+            "place": 1,
+            "value": 37
+          },
+          {
+            "dist": "euclid",
+            "place": 2,
+            "value": 38
+          },
+          {
+            "dist": "octile",
+            "place": 2,
+            "value": 38
+          },
+          {
+            "dist": "weighted",
+            "place": 2,
+            "value": 38
+          },
+          {
+            "dist": "diagonal",
+            "place": 2,
+            "value": 38
+          },
+          {
+            "dist": "manh",
+            "place": 6,
+            "value": 42
+          },
+          {
+            "dist": "mixed",
+            "place": 6,
+            "value": 42
+          }
+        ]
+      },
+      {
+        "seed": 170,
+        "ranking": [
+          {
+            "dist": "euclid",
+            "place": 1,
+            "value": 34
+          },
+          {
+            "dist": "octile",
+            "place": 1,
+            "value": 34
+          },
+          {
+            "dist": "weighted",
+            "place": 1,
+            "value": 34
+          },
+          {
+            "dist": "diagonal",
+            "place": 1,
+            "value": 34
+          },
+          {
+            "dist": "cheb",
+            "place": 5,
+            "value": 35
+          },
+          {
+            "dist": "manh",
+            "place": 6,
+            "value": 36
+          },
+          {
+            "dist": "mixed",
+            "place": 6,
+            "value": 36
+          }
+        ]
+      },
+      {
+        "seed": 171,
+        "ranking": [
+          {
+            "dist": "manh",
+            "place": 1,
+            "value": 21
+          },
+          {
+            "dist": "mixed",
+            "place": 1,
+            "value": 21
+          },
+          {
+            "dist": "euclid",
+            "place": 3,
+            "value": 24
+          },
+          {
+            "dist": "cheb",
+            "place": 3,
+            "value": 24
+          },
+          {
+            "dist": "octile",
+            "place": 3,
+            "value": 24
+          },
+          {
+            "dist": "weighted",
+            "place": 3,
+            "value": 24
+          },
+          {
+            "dist": "diagonal",
+            "place": 3,
+            "value": 24
+          }
+        ]
+      },
+      {
+        "seed": 172,
+        "ranking": [
+          {
+            "dist": "euclid",
+            "place": 1,
+            "value": 23
+          },
+          {
+            "dist": "cheb",
+            "place": 1,
+            "value": 23
+          },
+          {
+            "dist": "octile",
+            "place": 1,
+            "value": 23
+          },
+          {
+            "dist": "weighted",
+            "place": 1,
+            "value": 23
+          },
+          {
+            "dist": "diagonal",
+            "place": 1,
+            "value": 23
+          },
+          {
+            "dist": "manh",
+            "place": 6,
+            "value": 25
+          },
+          {
+            "dist": "mixed",
+            "place": 6,
+            "value": 25
+          }
+        ]
+      },
+      {
+        "seed": 173,
+        "ranking": [
+          {
+            "dist": "euclid",
+            "place": 1,
+            "value": 24
+          },
+          {
+            "dist": "cheb",
+            "place": 1,
+            "value": 24
+          },
+          {
+            "dist": "octile",
+            "place": 1,
+            "value": 24
+          },
+          {
+            "dist": "weighted",
+            "place": 1,
+            "value": 24
+          },
+          {
+            "dist": "diagonal",
+            "place": 1,
+            "value": 24
+          },
+          {
+            "dist": "manh",
+            "place": 6,
+            "value": 27
+          },
+          {
+            "dist": "mixed",
+            "place": 6,
+            "value": 27
+          }
+        ]
+      }
+    ],
+    "env3": [
+      {
+        "seed": 168,
+        "ranking": [
+          {
+            "dist": "cheb",
+            "place": 1,
+            "value": 103
+          },
+          {
+            "dist": "octile",
+            "place": 1,
+            "value": 103
+          },
+          {
+            "dist": "weighted",
+            "place": 1,
+            "value": 103
+          },
+          {
+            "dist": "diagonal",
+            "place": 1,
+            "value": 103
+          },
+          {
+            "dist": "euclid",
+            "place": 5,
+            "value": 107
+          },
+          {
+            "dist": "manh",
+            "place": 6,
+            "value": 114
+          },
+          {
+            "dist": "mixed",
+            "place": 6,
+            "value": 114
+          }
+        ]
+      },
+      {
+        "seed": 169,
+        "ranking": [
+          {
+            "dist": "euclid",
+            "place": 1,
+            "value": 110
+          },
+          {
+            "dist": "octile",
+            "place": 2,
+            "value": 111
+          },
+          {
+            "dist": "diagonal",
+            "place": 2,
+            "value": 111
+          },
+          {
+            "dist": "weighted",
+            "place": 4,
+            "value": 114
+          },
+          {
+            "dist": "manh",
+            "place": 5,
+            "value": 118
+          },
+          {
+            "dist": "mixed",
+            "place": 5,
+            "value": 118
+          },
+          {
+            "dist": "cheb",
+            "place": 7,
+            "value": 119
+          }
+        ]
+      },
+      {
+        "seed": 170,
+        "ranking": [
+          {
+            "dist": "euclid",
+            "place": 1,
+            "value": 80
+          },
+          {
+            "dist": "octile",
+            "place": 1,
+            "value": 80
+          },
+          {
+            "dist": "weighted",
+            "place": 1,
+            "value": 80
+          },
+          {
+            "dist": "diagonal",
+            "place": 1,
+            "value": 80
+          },
+          {
+            "dist": "cheb",
+            "place": 5,
+            "value": 81
+          },
+          {
+            "dist": "manh",
+            "place": 6,
+            "value": 93
+          },
+          {
+            "dist": "mixed",
+            "place": 6,
+            "value": 93
+          }
+        ]
+      },
+      {
+        "seed": 171,
+        "ranking": [
+          {
+            "dist": "cheb",
+            "place": 1,
+            "value": 136
+          },
+          {
+            "dist": "euclid",
+            "place": 2,
+            "value": 138
+          },
+          {
+            "dist": "octile",
+            "place": 2,
+            "value": 138
+          },
+          {
+            "dist": "weighted",
+            "place": 2,
+            "value": 138
+          },
+          {
+            "dist": "diagonal",
+            "place": 2,
+            "value": 138
+          },
+          {
+            "dist": "manh",
+            "place": 6,
+            "value": 167
+          },
+          {
+            "dist": "mixed",
+            "place": 6,
+            "value": 167
+          }
+        ]
+      },
+      {
+        "seed": 172,
+        "ranking": [
+          {
+            "dist": "euclid",
+            "place": 1,
+            "value": 88
+          },
+          {
+            "dist": "cheb",
+            "place": 1,
+            "value": 88
+          },
+          {
+            "dist": "octile",
+            "place": 1,
+            "value": 88
+          },
+          {
+            "dist": "weighted",
+            "place": 1,
+            "value": 88
+          },
+          {
+            "dist": "diagonal",
+            "place": 1,
+            "value": 88
+          },
+          {
+            "dist": "manh",
+            "place": 6,
+            "value": 98
+          },
+          {
+            "dist": "mixed",
+            "place": 6,
+            "value": 98
+          }
+        ]
+      },
+      {
+        "seed": 173,
+        "ranking": [
+          {
+            "dist": "weighted",
+            "place": 1,
+            "value": 115
+          },
+          {
+            "dist": "cheb",
+            "place": 2,
+            "value": 116
+          },
+          {
+            "dist": "octile",
+            "place": 3,
+            "value": 119
+          },
+          {
+            "dist": "diagonal",
+            "place": 3,
+            "value": 119
+          },
+          {
+            "dist": "euclid",
+            "place": 5,
+            "value": 123
+          },
+          {
+            "dist": "manh",
+            "place": 6,
+            "value": 142
+          },
+          {
+            "dist": "mixed",
+            "place": 6,
+            "value": 142
+          }
+        ]
+      }
+    ],
+    "env4": [
+      {
+        "seed": 168,
+        "ranking": [
+          {
+            "dist": "octile",
+            "place": 1,
+            "value": 128
+          },
+          {
+            "dist": "weighted",
+            "place": 1,
+            "value": 128
+          },
+          {
+            "dist": "diagonal",
+            "place": 1,
+            "value": 128
+          },
+          {
+            "dist": "cheb",
+            "place": 4,
+            "value": 131
+          },
+          {
+            "dist": "euclid",
+            "place": 5,
+            "value": 134
+          },
+          {
+            "dist": "manh",
+            "place": 6,
+            "value": 143
+          },
+          {
+            "dist": "mixed",
+            "place": 6,
+            "value": 143
+          }
+        ]
+      },
+      {
+        "seed": 169,
+        "ranking": [
+          {
+            "dist": "cheb",
+            "place": 1,
+            "value": 113
+          },
+          {
+            "dist": "euclid",
+            "place": 2,
+            "value": 118
+          },
+          {
+            "dist": "octile",
+            "place": 2,
+            "value": 118
+          },
+          {
+            "dist": "weighted",
+            "place": 2,
+            "value": 118
+          },
+          {
+            "dist": "diagonal",
+            "place": 2,
+            "value": 118
+          },
+          {
+            "dist": "manh",
+            "place": 6,
+            "value": 127
+          },
+          {
+            "dist": "mixed",
+            "place": 6,
+            "value": 127
+          }
+        ]
+      },
+      {
+        "seed": 170,
+        "ranking": [
+          {
+            "dist": "weighted",
+            "place": 1,
+            "value": 116
+          },
+          {
+            "dist": "octile",
+            "place": 2,
+            "value": 120
+          },
+          {
+            "dist": "diagonal",
+            "place": 2,
+            "value": 120
+          },
+          {
+            "dist": "euclid",
+            "place": 4,
+            "value": 124
+          },
+          {
+            "dist": "manh",
+            "place": 5,
+            "value": 126
+          },
+          {
+            "dist": "mixed",
+            "place": 5,
+            "value": 126
+          },
+          {
+            "dist": "cheb",
+            "place": 7,
+            "value": 133
+          }
+        ]
+      },
+      {
+        "seed": 171,
+        "ranking": [
+          {
+            "dist": "weighted",
+            "place": 1,
+            "value": 123
+          },
+          {
+            "dist": "manh",
+            "place": 2,
+            "value": 127
+          },
+          {
+            "dist": "mixed",
+            "place": 2,
+            "value": 127
+          },
+          {
+            "dist": "octile",
+            "place": 4,
+            "value": 131
+          },
+          {
+            "dist": "diagonal",
+            "place": 4,
+            "value": 131
+          },
+          {
+            "dist": "euclid",
+            "place": 6,
+            "value": 137
+          },
+          {
+            "dist": "cheb",
+            "place": 7,
+            "value": 301
+          }
+        ]
+      },
+      {
+        "seed": 172,
+        "ranking": [
+          {
+            "dist": "euclid",
+            "place": 1,
+            "value": 110
+          },
+          {
+            "dist": "octile",
+            "place": 1,
+            "value": 110
+          },
+          {
+            "dist": "diagonal",
+            "place": 1,
+            "value": 110
+          },
+          {
+            "dist": "weighted",
+            "place": 4,
+            "value": 116
+          },
+          {
+            "dist": "manh",
+            "place": 5,
+            "value": 125
+          },
+          {
+            "dist": "mixed",
+            "place": 5,
+            "value": 125
+          },
+          {
+            "dist": "cheb",
+            "place": 7,
+            "value": 129
+          }
+        ]
+      },
+      {
+        "seed": 173,
+        "ranking": [
+          {
+            "dist": "euclid",
+            "place": 1,
+            "value": 95
+          },
+          {
+            "dist": "cheb",
+            "place": 2,
+            "value": 98
+          },
+          {
+            "dist": "octile",
+            "place": 2,
+            "value": 98
+          },
+          {
+            "dist": "weighted",
+            "place": 2,
+            "value": 98
+          },
+          {
+            "dist": "diagonal",
+            "place": 2,
+            "value": 98
+          },
+          {
+            "dist": "manh",
+            "place": 6,
+            "value": 106
+          },
+          {
+            "dist": "mixed",
+            "place": 6,
+            "value": 106
+          }
+        ]
+      }
+    ]
+  },
+  "average_places": {
+    "env1": {
+      "manh": 3.5,
+      "euclid": 2.6666666666666665,
+      "cheb": 3.1666666666666665,
+      "octile": 2.0,
+      "mixed": 3.5,
+      "weighted": 2.0,
+      "diagonal": 2.0
+    },
+    "env2": {
+      "manh": 5.166666666666667,
+      "euclid": 1.5,
+      "cheb": 2.6666666666666665,
+      "octile": 1.5,
+      "mixed": 5.166666666666667,
+      "weighted": 1.5,
+      "diagonal": 1.5
+    },
+    "env3": {
+      "manh": 5.833333333333333,
+      "euclid": 2.5,
+      "cheb": 2.8333333333333335,
+      "octile": 1.6666666666666667,
+      "mixed": 5.833333333333333,
+      "weighted": 1.6666666666666667,
+      "diagonal": 1.6666666666666667
+    },
+    "env4": {
+      "manh": 5.0,
+      "euclid": 3.1666666666666665,
+      "cheb": 4.666666666666667,
+      "octile": 2.0,
+      "mixed": 5.0,
+      "weighted": 1.8333333333333333,
+      "diagonal": 2.0
+    }
+  },
+  "seeds": [
+    168,
+    169,
+    170,
+    171,
+    172,
+    173
+  ],
+  "dists": [
+    "manh",
+    "euclid",
+    "cheb",
+    "octile",
+    "mixed",
+    "weighted",
+    "diagonal"
+  ]
+}
