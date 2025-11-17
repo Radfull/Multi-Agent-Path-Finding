@@ -1,5 +1,5 @@
 import random
-from solver.phans_null_agent_swapping import PHANS
+from src.phans_null_agent_swapping import PHANS
 
 
 def eval_env1(plot:bool = False, used_dist:str = 'manh', seed = 168):                

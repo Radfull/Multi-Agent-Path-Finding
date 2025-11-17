@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 from matplotlib.animation import PillowWriter
 import numpy as np
 
-from solver.a_star import AStarFollowingConflict
+from src.search_algorithms.a_star import AStarFollowingConflict
 
 
 class PHANS:
