@@ -1,3 +1,5 @@
+import matplotlib.pyplot as plt
+
 class Location:
     def __init__(self, x: int = -1, y: int = -1):
         self.x = x

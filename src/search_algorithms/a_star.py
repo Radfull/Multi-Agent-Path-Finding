@@ -19,6 +19,7 @@ class AStarFollowingConflict():
         is_dst_add: bool = True,
         considering_cycle_conflict: bool = True,
         used_dist: str = 'euclid',
+        weight:float = 1.0
     ):
         if moving_obstacles is None:
             moving_obstacles = []
@@ -39,6 +40,7 @@ class AStarFollowingConflict():
         self.is_dst_add = is_dst_add
         self.considering_cycle_conflict = considering_cycle_conflict
         self.used_dist = used_dist
+        self.weight = weight
 
         start_state = State(0, Location(agent["start"][0], agent["start"][1]))
         goal_state = State(0, Location(agent["goal"][0], agent["goal"][1]))
@@ -260,7 +262,8 @@ class AStarFollowingConflict():
                 came_from[neighbor] = current
                 g_score[neighbor] = tentative_g_score
                 h_score = self._admissible_heuristic(neighbor)
-                f_score[neighbor] = g_score[neighbor] + h_score + dst_add
+                # if f_score = g, we get Dijkstra's algorithm, if f_score = g_score + h_score we get standart a*
+                f_score[neighbor] = g_score[neighbor] + self.weight  * h_score + dst_add
                 heapq.heappush(heap, (f_score[neighbor], h_score, next(index), neighbor))
         return False
 

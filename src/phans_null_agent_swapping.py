@@ -103,6 +103,10 @@ class PHANS:
         if self.search_type == 'focal':
             common_args["focal_max_iter"] = a_star_max_iter
             return FocalSearchFollowingConflict(**common_args, w=self.focal_weight)
+        if self.search_type == 'aw_star':
+            common_args["a_star_max_iter"] = a_star_max_iter
+            common_args["weight"] = 3.0
+            return AStarFollowingConflict(**common_args)
         else:
             common_args["a_star_max_iter"] = a_star_max_iter
             return AStarFollowingConflict(**common_args)
