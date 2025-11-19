@@ -6,6 +6,7 @@ from matplotlib.animation import PillowWriter
 import numpy as np
 
 from src.search_algorithms.a_star import AStarFollowingConflict
+from src.search_algorithms.bi_a_star import BiAStarFollowingConflict
 from src.search_algorithms.focal_search import FocalSearchFollowingConflict
 
 
@@ -17,7 +18,7 @@ class PHANS:
         static_obstacles: list[tuple[int, int]] = None,
         used_dist:str = 'euclid',
         search_type: str = 'a_star',  # 'a_star' or 'focal'
-        focal_weight: float = 1.5     # Weight for focal search suboptimality bound
+        weight: float = 1.5     # Weight for focal search suboptimality bound
     ):
         """
         A grid environment where multiple agents move while avoiding static and
@@ -38,7 +39,7 @@ class PHANS:
         self.static_obss = static_obstacles
         self.used_dist = used_dist
         self.search_type = search_type
-        self.focal_weight = focal_weight
+        self.weight = weight
 
         self.ag_start_pos_lst = []
         self.ag_cur_pos_lst = []
@@ -102,11 +103,15 @@ class PHANS:
         
         if self.search_type == 'focal':
             common_args["focal_max_iter"] = a_star_max_iter
-            return FocalSearchFollowingConflict(**common_args, w=self.focal_weight)
+            return FocalSearchFollowingConflict(**common_args, w=self.weight)
         if self.search_type == 'aw_star':
             common_args["a_star_max_iter"] = a_star_max_iter
-            common_args["weight"] = 3.0
+            common_args["weight"] = self.weight
             return AStarFollowingConflict(**common_args)
+        if self.search_type == 'bi_a_star':
+            common_args["a_star_max_iter"] = a_star_max_iter
+            common_args["weight"] = self.weight
+            return BiAStarFollowingConflict(**common_args)
         else:
             common_args["a_star_max_iter"] = a_star_max_iter
             return AStarFollowingConflict(**common_args)

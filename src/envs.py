@@ -2,7 +2,7 @@ import random
 from src.phans_null_agent_swapping import PHANS
 
 
-def eval_env1(plot:bool = False, used_dist:str = 'manh', seed = 168, search_type = 'a_star', density: float = None):
+def eval_env1(plot:bool = False, used_dist:str = 'manh', seed = 168, search_type = 'a_star', density: float = None, w = 1.0):
     """
     Environment 1: Small grid (14x7) without static obstacles.
     
@@ -46,7 +46,7 @@ def eval_env1(plot:bool = False, used_dist:str = 'manh', seed = 168, search_type
     # --------------------------
     # Run
     # --------------------------
-    problem = PHANS(size_x, size_y, static_obstacles=static_obss, used_dist = used_dist, search_type=search_type)
+    problem = PHANS(size_x, size_y, static_obstacles=static_obss, used_dist = used_dist, search_type=search_type, weight=w)
     all_path_lst = problem.run_loop(ag_start_pos_lst, task_lst)
     
     # --------------------------
@@ -58,7 +58,7 @@ def eval_env1(plot:bool = False, used_dist:str = 'manh', seed = 168, search_type
 
     return all_path_lst
 
-def eval_env2(plot:bool = False, used_dist:str = 'manh', seed = 168, search_type:str = 'a_star', density: float = None):
+def eval_env2(plot:bool = False, used_dist:str = 'manh', seed = 168, search_type:str = 'a_star', density: float = None, w = 1.0):
     """
     Environment 2: Small grid (14x7) with static obstacles.
     
@@ -105,7 +105,7 @@ def eval_env2(plot:bool = False, used_dist:str = 'manh', seed = 168, search_type
     # --------------------------
     # Run
     # --------------------------
-    problem = PHANS(size_x, size_y, static_obstacles=static_obss, used_dist= used_dist, search_type =search_type)
+    problem = PHANS(size_x, size_y, static_obstacles=static_obss, used_dist= used_dist, search_type =search_type, weight=w)
     all_path_lst = problem.run_loop(ag_start_pos_lst, task_lst)
     
     # --------------------------
@@ -119,7 +119,7 @@ def eval_env2(plot:bool = False, used_dist:str = 'manh', seed = 168, search_type
     return all_path_lst
 
 
-def eval_env3(plot:bool = False, used_dist:str = 'manh', seed = 168, search_type: str = 'a_star', density: float = None):
+def eval_env3(plot:bool = False, used_dist:str = 'manh', seed = 168, search_type: str = 'a_star', density: float = None, w = 1.0):
     """
     Environment 3: Large grid (35x21) without static obstacles, 12 target agents.
     
@@ -176,7 +176,7 @@ def eval_env3(plot:bool = False, used_dist:str = 'manh', seed = 168, search_type
     # --------------------------
     # Run
     # --------------------------
-    problem = PHANS(size_x, size_y, static_obstacles=static_obss, used_dist=used_dist, search_type=search_type)
+    problem = PHANS(size_x, size_y, static_obstacles=static_obss, used_dist=used_dist, search_type=search_type, weight=w)
     all_path_lst = problem.run_loop(ag_start_pos_lst, task_lst)
     
     # --------------------------
@@ -188,7 +188,7 @@ def eval_env3(plot:bool = False, used_dist:str = 'manh', seed = 168, search_type
 
     return all_path_lst
 
-def eval_env4(plot:bool = False, used_dist:str = 'manh', seed = 168, search_type='a_star', density: float = None):
+def eval_env4(plot:bool = False, used_dist:str = 'manh', seed = 168, search_type='a_star', density: float = None, w = 1.0):
     """
     Environment 4: Large grid (35x21) with static obstacles, 12 target agents.
     
@@ -262,7 +262,7 @@ def eval_env4(plot:bool = False, used_dist:str = 'manh', seed = 168, search_type
     # --------------------------
     # Run
     # --------------------------
-    problem = PHANS(size_x, size_y, static_obstacles=static_obss, used_dist=used_dist, search_type=search_type)
+    problem = PHANS(size_x, size_y, static_obstacles=static_obss, used_dist=used_dist, search_type=search_type, weight=w)
     all_path_lst = problem.run_loop(ag_start_pos_lst, task_lst)
     
     # --------------------------
