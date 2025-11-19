@@ -5,21 +5,22 @@ import numpy as np
 
 from src.utils import Location, State
 
+
 class AStarFollowingConflict():
     def __init__(
-        self,
-        dimension: tuple[int, int],
-        agent: dict,
-        obstacles: set,
-        moving_obstacles: list[tuple[int, int, int]] = None,
-        moving_obstacle_edges: list[tuple[int, int, int, int]] = None,
-        a_star_max_iter: int = -1,
-        agent_start_pos_lst: list[tuple[int, int]] = None,
-        null_agent_pos_lst: list[tuple[int, int]] = None,
-        is_dst_add: bool = True,
-        considering_cycle_conflict: bool = True,
-        used_dist: str = 'euclid',
-        weight:float = 1.0
+            self,
+            dimension: tuple[int, int],
+            agent: dict,
+            obstacles: set,
+            moving_obstacles: list[tuple[int, int, int]] = None,
+            moving_obstacle_edges: list[tuple[int, int, int, int]] = None,
+            a_star_max_iter: int = -1,
+            agent_start_pos_lst: list[tuple[int, int]] = None,
+            null_agent_pos_lst: list[tuple[int, int]] = None,
+            is_dst_add: bool = True,
+            considering_cycle_conflict: bool = True,
+            used_dist: str = 'euclid',
+            weight: float = 1.0
     ):
         if moving_obstacles is None:
             moving_obstacles = []
@@ -45,8 +46,23 @@ class AStarFollowingConflict():
         start_state = State(0, Location(agent["start"][0], agent["start"][1]))
         goal_state = State(0, Location(agent["goal"][0], agent["goal"][1]))
         self.agent = {"start": start_state, "goal": goal_state}
-        
+
         self.iter = 0
+        
+        # Cache goal coordinates for faster heuristic computation
+        self.goal_x = goal_state.location.x
+        self.goal_y = goal_state.location.y
+        
+        # Cache obstacles by time to avoid repeated computation
+        # Use LRU-style cache with size limit
+        self._obstacle_cache = {}
+        self._obstacle_cache_max_size = 500  # Reduced from 1000
+        
+        # Pre-compute null agent positions as numpy array if needed
+        if self.is_dst_add and len(self.null_agent_pos_lst) > 0:
+            self._null_xy_array = np.array(self.null_agent_pos_lst, dtype=np.int32)
+        else:
+            self._null_xy_array = None
 
     def _get_neighbors(self, state: State) -> list[State]:
         neighbors = []
@@ -74,20 +90,43 @@ class AStarFollowingConflict():
         return neighbors
 
     def _get_all_obstacles(self, time: int) -> set[tuple[int, int]]:
+        # Cache obstacles by time - but only if we have many moving obstacles
+        if len(self.moving_obstacles) < 10:
+            # For few obstacles, direct computation is faster
+            all_obs = set()
+            for o in self.moving_obstacles:
+                if o[2] < 0 and time >= -o[2]:
+                    all_obs.add((o[0], o[1]))
+            return self.obstacles | all_obs
+        
+        # For many obstacles, use cache
+        if time in self._obstacle_cache:
+            return self._obstacle_cache[time]
+        
         all_obs = set()
         for o in self.moving_obstacles:
             if o[2] < 0 and time >= -o[2]:
                 all_obs.add((o[0], o[1]))
-        return self.obstacles | all_obs
+        result = self.obstacles | all_obs
+        
+        # Limit cache size - remove oldest entries if cache is too large
+        if len(self._obstacle_cache) >= self._obstacle_cache_max_size:
+            sorted_times = sorted(self._obstacle_cache.keys())
+            remove_count = len(sorted_times) // 5
+            for t in sorted_times[:remove_count]:
+                del self._obstacle_cache[t]
+        
+        self._obstacle_cache[time] = result
+        return result
 
     def _state_valid(self, state: State) -> bool:
         return (
-            state.location.x >= 0
-            and state.location.x < self.dimension[0]
-            and state.location.y >= 0
-            and state.location.y < self.dimension[1]
-            and (state.location.x, state.location.y)
-            not in self._get_all_obstacles(state.time)
+                state.location.x >= 0
+                and state.location.x < self.dimension[0]
+                and state.location.y >= 0
+                and state.location.y < self.dimension[1]
+                and (state.location.x, state.location.y)
+                not in self._get_all_obstacles(state.time)
         )
 
     def _find_cycles(self, idx_vectors: list[tuple[int, int]]) -> bool:
@@ -110,24 +149,24 @@ class AStarFollowingConflict():
     def _transition_valid(self, state_cur: State, state_next: State) -> bool:
         # Vertex conflicts against moving obstacles
         if (state_next.location.x, state_next.location.y, state_next.time) in (
-            self.moving_obstacles
+                self.moving_obstacles
         ):
             return False
         # Following conflicts against moving obstacles (including edge conflicts)
         if (state_next.location.x, state_next.location.y, state_next.time - 1) in (
-            self.moving_obstacles
+                self.moving_obstacles
         ):
             return False
         if (state_next.location.x, state_next.location.y, state_next.time + 1) in (
-            self.moving_obstacles
+                self.moving_obstacles
         ):
             return False
         # Edge conflicts against moving obstacle (without considering time)
         if (
-            state_next.location.x,
-            state_next.location.y,
-            state_cur.location.x,
-            state_cur.location.y,
+                state_next.location.x,
+                state_next.location.y,
+                state_cur.location.x,
+                state_cur.location.y,
         ) in self.moving_obstacle_edges:
             return False
         # Cycle conflicts against moving obstacle (without considering time)
@@ -152,45 +191,43 @@ class AStarFollowingConflict():
 
     # попробовать поиграться с эвристикой
 
-    def __manhattan_dist(self, state:State, goal):
-        return fabs(state.location.x - goal.location.x) + fabs(
-            state.location.y - goal.location.y
-        )
+    def __manhattan_dist(self, state: State):
+        # Use cached goal coordinates
+        return abs(state.location.x - self.goal_x) + abs(state.location.y - self.goal_y)
 
-    def __euclid_dist(self, state:State, goal):
-        return sqrt((state.location.x - goal.location.x)**2 + (state.location.y - goal.location.y)**2)
-    
-    def __chebyshev_dist(self, state:State, goal):
-        return max(fabs(state.location.x - goal.location.x), fabs(state.location.y - goal.location.y))
-    
+    def __euclid_dist(self, state: State):
+        dx = state.location.x - self.goal_x
+        dy = state.location.y - self.goal_y
+        return sqrt(dx * dx + dy * dy)
 
-    def __octile_dist(self, state:State, goal):
-        dx = abs(state.location.x - goal.location.x)
-        dy = abs(state.location.y - goal.location.y)
+    def __chebyshev_dist(self, state: State):
+        return max(abs(state.location.x - self.goal_x), abs(state.location.y - self.goal_y))
+
+    def __octile_dist(self, state: State):
+        dx = abs(state.location.x - self.goal_x)
+        dy = abs(state.location.y - self.goal_y)
         return max(dx, dy) + (sqrt(2) - 1) * min(dx, dy)
-    
-    def __mixed_max(self, state:State, goal):
-        return max(self.__manhattan_dist(state, goal), self.__chebyshev_dist(state, goal))
-    
-    def __weighted_mixed(self, state:State, goal, alpha=0.5):
-        return alpha * self.__manhattan_dist(state, goal) + (1 - alpha) * self.__chebyshev_dist(state, goal)
-    
+
+    def __mixed_max(self, state: State):
+        return max(self.__manhattan_dist(state), self.__chebyshev_dist(state))
+
+    def __weighted_mixed(self, state: State, alpha=0.5):
+        return alpha * self.__manhattan_dist(state) + (1 - alpha) * self.__chebyshev_dist(state)
+
     def _admissible_heuristic(self, state: State) -> float:
-        goal = self.agent["goal"]
+        # Use cached goal coordinates (no need to pass goal parameter)
         if self.used_dist == 'euclid':
-            return self.__euclid_dist(state, goal)            
+            return self.__euclid_dist(state)
         elif self.used_dist == 'cheb':
-            return self.__chebyshev_dist(state, goal)
+            return self.__chebyshev_dist(state)
         elif self.used_dist == 'octile':
-            return self.__octile_dist(state, goal)
+            return self.__octile_dist(state)
         elif self.used_dist == 'mixed':
-            return self.__mixed_max(state, goal)
+            return self.__mixed_max(state)
         elif self.used_dist == 'weighted':
-            return self.__weighted_mixed(state, goal)
+            return self.__weighted_mixed(state)
         else:
-            return self.__manhattan_dist(state, goal)
-            
-        
+            return self.__manhattan_dist(state)
 
     def _is_at_goal(self, state: State) -> bool:
         goal_state = self.agent["goal"]
@@ -246,11 +283,11 @@ class AStarFollowingConflict():
                 tentative_g_score = g_score.setdefault(current, float("inf")) + step_cost
 
                 dst_add = 0
-                if self.is_dst_add:
+                if self.is_dst_add and self._null_xy_array is not None:
+                    # Optimized: use pre-computed numpy array and vectorized operations
                     nx, ny = neighbor.location.x, neighbor.location.y
-                    neighbor_xy = np.array((nx, ny))
-                    null_xy = np.array(self.null_agent_pos_lst)
-                    dst_to_null = np.abs(null_xy - neighbor_xy).sum(axis=1).min()
+                    # Vectorized Manhattan distance computation
+                    dst_to_null = np.abs(self._null_xy_array - np.array([nx, ny])).sum(axis=1).min()
                     if dst_to_null > 0 and dst_to_null > tentative_g_score:
                         dst_add = dst_to_null - tentative_g_score
 
@@ -263,7 +300,7 @@ class AStarFollowingConflict():
                 g_score[neighbor] = tentative_g_score
                 h_score = self._admissible_heuristic(neighbor)
                 # if f_score = g, we get Dijkstra's algorithm, if f_score = g_score + h_score we get standart a*
-                f_score[neighbor] = g_score[neighbor] + self.weight  * h_score + dst_add
+                f_score[neighbor] = g_score[neighbor] + self.weight * h_score + dst_add
                 heapq.heappush(heap, (f_score[neighbor], h_score, next(index), neighbor))
         return False
 
@@ -271,10 +308,10 @@ class AStarFollowingConflict():
         local_solution = self._search()
         if not local_solution:
             return {}
-        
+
         path_dict_list = [
             {"t": state.time, "x": state.location.x, "y": state.location.y}
             for state in local_solution
         ]
-        
+
         return path_dict_list

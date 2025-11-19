@@ -4,15 +4,16 @@ import matplotlib.pyplot as plt
 import numpy as np
 import os
 import json
+import time
 
-def run_density_experiment(search_type:str='a_star', weight:float=1.0):
+start = time.time()
+def run_density_experiment(search_type:str='focal', weight:float=1.0):
     '''search_type = ('focal', 'a_star', 'bi_a_star')'''
-    heuristics = ['manh', 'diagonal', 'euclid', 'weighted']
+    heuristics = ['manh']
     densities = list(range(10, 100, 10))
-    seeds = list(range(168, 174))
+    # seeds = list(range(168, 171))
+    seeds = [169,170]
     envs = [
-        ('env1', eval_env1),
-        ('env2', eval_env2),
         ('env3', eval_env3),
         ('env4', eval_env4)
     ]
@@ -35,7 +36,7 @@ def run_density_experiment(search_type:str='a_star', weight:float=1.0):
                     results[env_name][density][heuristic]['runtime'].append(elapsed)
                     
                     print(f'{env_name} dens={density}% seed={seed} dist={heuristic}: steps={makespan}, runtime={elapsed:.4f}s')
-    
+    '''
     averages = {}
     for env_name in results:
         averages[env_name] = {}
@@ -184,7 +185,7 @@ def plot_alg_time_steps(env_name: str, seeds: list[int], densities: list[float])
 
     plt.tight_layout()
     plt.show()
-
+'''
 def main():
 
     run_density_experiment(search_type='focal')
@@ -221,3 +222,6 @@ def main():
 
 if __name__ == "__main__":
     main()
+    end = time.time()
+
+    print("Время выполнения:", end - start, "сек")
