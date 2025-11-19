@@ -168,6 +168,14 @@ class FocalSearchFollowingConflict():
     def __weighted_mixed(self, state:State, goal, alpha=0.5):
         return alpha * self.__manhattan_dist(state, goal) + (1 - alpha) * self.__chebyshev_dist(state, goal)
     
+    def __diagonal_dist(self, state: State, goal):
+        dx = abs(state.location.x - goal.location.x)
+        dy = abs(state.location.y - goal.location.y)
+        D = 1.0  
+        D2 = sqrt(2) 
+        return D * (dx + dy) + (D2 - 2 * D) * min(dx, dy)
+
+    
     def _admissible_heuristic(self, state: State) -> float:
         goal = self.agent["goal"]
         if self.used_dist == 'euclid':
@@ -180,6 +188,8 @@ class FocalSearchFollowingConflict():
             return self.__mixed_max(state, goal)
         elif self.used_dist == 'weighted':
             return self.__weighted_mixed(state, goal)
+        elif self.used_dist == 'diagonal':
+            return self.__diagonal_dist(state, goal)
         else:
             return self.__manhattan_dist(state, goal)
 

@@ -2,18 +2,23 @@ import random
 from src.phans_null_agent_swapping import PHANS
 
 
-def eval_env1(plot:bool = False, used_dist:str = 'manh', seed = 168, search_type = 'a_star', density: float = None, w = 1.0):
-    """
-    Environment 1: Small grid (14x7) without static obstacles.
-    
-    Args:
-        plot: Whether to save animation GIF
-        used_dist: Distance metric ('manh', 'euclid', 'cheb', 'octile', 'mixed', 'weighted')
-        seed: Random seed for reproducibility
-        search_type: Search algorithm type ('a_star' or 'focal')
-        density: Agent density as fraction of available cells (0.0 to 1.0). 
-                 None uses default (88 other agents). Higher density = more agents.
-    """
+def _compute_other_agents(
+    size_x: int,
+    size_y: int,
+    density_percent: int,
+    static_obstacles_count: int = 0,
+    density_boost: int = 0,
+    max_available: int | None = None,
+) -> int:
+    adjusted_density = max(0, density_percent + density_boost)
+    total_slots = int(size_x * size_y * adjusted_density / 100)
+    num_agents = max(0, total_slots - static_obstacles_count)
+    if max_available is not None:
+        num_agents = min(num_agents, max_available)
+    return num_agents
+
+
+def eval_env1(plot:bool = False,search_type:str = 'a_star', used_dist:str = 'manh', seed = 168, density_percent: int = 90, w:float = 1.0):                
     # --------------------------
     # problem definition
     # --------------------------
@@ -29,16 +34,8 @@ def eval_env1(plot:bool = False, used_dist:str = 'manh', seed = 168, search_type
     tgt_ag_start_pos_lst = random.sample(tgt_ag_option_nodes, len(task_lst))
 
     other_ag_option_nodes = list(set([(x, y) for x in range(size_x) for y in range(size_y)]) - set(static_obss+tgt_ag_start_pos_lst))
-    
-    # Calculate number of other agents based on density
-    if density is None:
-        num_other_agents = 88  # Default value
-    else:
-        # density is a fraction (0.0 to 1.0) of available cells
-        max_available = len(other_ag_option_nodes)
-        num_other_agents = int(max_available * density)
-        num_other_agents = min(num_other_agents, max_available)  # Ensure we don't exceed available cells
-    
+    max_available_nodes = len(other_ag_option_nodes)
+    num_other_agents = _compute_other_agents(size_x, size_y, density_percent, max_available=max_available_nodes)
     other_ag_start_pos_lst = random.sample(other_ag_option_nodes, num_other_agents)
 
     ag_start_pos_lst = tgt_ag_start_pos_lst + other_ag_start_pos_lst
@@ -46,7 +43,7 @@ def eval_env1(plot:bool = False, used_dist:str = 'manh', seed = 168, search_type
     # --------------------------
     # Run
     # --------------------------
-    problem = PHANS(size_x, size_y, static_obstacles=static_obss, used_dist = used_dist, search_type=search_type, weight=w)
+    problem = PHANS(size_x, size_y, static_obstacles=static_obss, used_dist = used_dist,search_type=search_type, weight=w)
     all_path_lst = problem.run_loop(ag_start_pos_lst, task_lst)
     
     # --------------------------
@@ -58,18 +55,7 @@ def eval_env1(plot:bool = False, used_dist:str = 'manh', seed = 168, search_type
 
     return all_path_lst
 
-def eval_env2(plot:bool = False, used_dist:str = 'manh', seed = 168, search_type:str = 'a_star', density: float = None, w = 1.0):
-    """
-    Environment 2: Small grid (14x7) with static obstacles.
-    
-    Args:
-        plot: Whether to save animation GIF
-        used_dist: Distance metric ('manh', 'euclid', 'cheb', 'octile', 'mixed', 'weighted')
-        seed: Random seed for reproducibility
-        search_type: Search algorithm type ('a_star' or 'focal')
-        density: Agent density as fraction of available cells (0.0 to 1.0). 
-                 None uses default (76 other agents). Higher density = more agents.
-    """
+def eval_env2(plot:bool = False,search_type:str='a_star', used_dist:str = 'manh', seed = 168, density_percent: int = 90, w:float = 1.0):                
     # --------------------------
     # problem definition
     # --------------------------
@@ -88,16 +74,14 @@ def eval_env2(plot:bool = False, used_dist:str = 'manh', seed = 168, search_type
     tgt_ag_start_pos_lst = random.sample(tgt_ag_option_nodes, len(task_lst))
 
     other_ag_option_nodes = list(set([(x, y) for x in range(size_x) for y in range(size_y)]) - set(static_obss+tgt_ag_start_pos_lst))
-    
-    # Calculate number of other agents based on density
-    if density is None:
-        num_other_agents = 76  # Default value
-    else:
-        # density is a fraction (0.0 to 1.0) of available cells
-        max_available = len(other_ag_option_nodes)
-        num_other_agents = int(max_available * density)
-        num_other_agents = min(num_other_agents, max_available)  # Ensure we don't exceed available cells
-    
+    max_available_nodes = len(other_ag_option_nodes)
+    num_other_agents = _compute_other_agents(
+        size_x,
+        size_y,
+        density_percent,
+        static_obstacles_count=len(static_obss),
+        max_available=max_available_nodes,
+    )
     other_ag_start_pos_lst = random.sample(other_ag_option_nodes, num_other_agents)
 
     ag_start_pos_lst = tgt_ag_start_pos_lst + other_ag_start_pos_lst
@@ -105,7 +89,7 @@ def eval_env2(plot:bool = False, used_dist:str = 'manh', seed = 168, search_type
     # --------------------------
     # Run
     # --------------------------
-    problem = PHANS(size_x, size_y, static_obstacles=static_obss, used_dist= used_dist, search_type =search_type, weight=w)
+    problem = PHANS(size_x, size_y, static_obstacles=static_obss, used_dist= used_dist,search_type=search_type, weight=w)
     all_path_lst = problem.run_loop(ag_start_pos_lst, task_lst)
     
     # --------------------------
@@ -119,18 +103,9 @@ def eval_env2(plot:bool = False, used_dist:str = 'manh', seed = 168, search_type
     return all_path_lst
 
 
-def eval_env3(plot:bool = False, used_dist:str = 'manh', seed = 168, search_type: str = 'a_star', density: float = None, w = 1.0):
-    """
-    Environment 3: Large grid (35x21) without static obstacles, 12 target agents.
-    
-    Args:
-        plot: Whether to save animation GIF
-        used_dist: Distance metric ('manh', 'euclid', 'cheb', 'octile', 'mixed', 'weighted')
-        seed: Random seed for reproducibility
-        search_type: Search algorithm type ('a_star' or 'focal')
-        density: Agent density as fraction of available cells (0.0 to 1.0). 
-                 None uses default (698 other agents). Higher density = more agents.
-    """
+
+
+def eval_env3(plot:bool = False,search_type:str='a_star', used_dist:str = 'manh',seed = 168, density_percent: int = 90, w:float = 1.0):                
     # --------------------------
     # problem definition
     # --------------------------
@@ -159,16 +134,14 @@ def eval_env3(plot:bool = False, used_dist:str = 'manh', seed = 168, search_type
     tgt_ag_start_pos_lst = random.sample(tgt_ag_option_nodes, len(task_lst))
 
     other_ag_option_nodes = list(set([(x, y) for x in range(size_x) for y in range(size_y)]) - set(static_obss+tgt_ag_start_pos_lst))
-    
-    # Calculate number of other agents based on density
-    if density is None:
-        num_other_agents = 698  # Default value
-    else:
-        # density is a fraction (0.0 to 1.0) of available cells
-        max_available = len(other_ag_option_nodes)
-        num_other_agents = int(max_available * density)
-        num_other_agents = min(num_other_agents, max_available)  # Ensure we don't exceed available cells
-    
+    max_available_nodes = len(other_ag_option_nodes)
+    num_other_agents = _compute_other_agents(
+        size_x,
+        size_y,
+        density_percent,
+        density_boost=5,
+        max_available=max_available_nodes,
+    )
     other_ag_start_pos_lst = random.sample(other_ag_option_nodes, num_other_agents)
 
     ag_start_pos_lst = tgt_ag_start_pos_lst + other_ag_start_pos_lst
@@ -176,7 +149,7 @@ def eval_env3(plot:bool = False, used_dist:str = 'manh', seed = 168, search_type
     # --------------------------
     # Run
     # --------------------------
-    problem = PHANS(size_x, size_y, static_obstacles=static_obss, used_dist=used_dist, search_type=search_type, weight=w)
+    problem = PHANS(size_x, size_y, static_obstacles=static_obss, used_dist=used_dist,search_type=search_type, weight=w)
     all_path_lst = problem.run_loop(ag_start_pos_lst, task_lst)
     
     # --------------------------
@@ -188,18 +161,7 @@ def eval_env3(plot:bool = False, used_dist:str = 'manh', seed = 168, search_type
 
     return all_path_lst
 
-def eval_env4(plot:bool = False, used_dist:str = 'manh', seed = 168, search_type='a_star', density: float = None, w = 1.0):
-    """
-    Environment 4: Large grid (35x21) with static obstacles, 12 target agents.
-    
-    Args:
-        plot: Whether to save animation GIF
-        used_dist: Distance metric ('manh', 'euclid', 'cheb', 'octile', 'mixed', 'weighted')
-        seed: Random seed for reproducibility
-        search_type: Search algorithm type ('a_star' or 'focal')
-        density: Agent density as fraction of available cells (0.0 to 1.0). 
-                 None uses default (608 other agents). Higher density = more agents.
-    """
+def eval_env4(plot:bool = False,search_type:str='a_star', used_dist:str = 'manh', seed = 168, density_percent: int = 90, w:float = 1.0):                
     # --------------------------
     # problem definition
     # --------------------------
@@ -236,6 +198,7 @@ def eval_env4(plot:bool = False, used_dist:str = 'manh', seed = 168, search_type
                 (int(size_x*2/3), size_y-1),
                 (0, int(size_y*2/3)-1),
 
+
                 (int(size_x*2/3), 0),
                 (size_x-1, int(size_y*2/3)-1),
                 (int(size_x*1/3), size_y-1), 
@@ -245,16 +208,15 @@ def eval_env4(plot:bool = False, used_dist:str = 'manh', seed = 168, search_type
     tgt_ag_start_pos_lst = random.sample(tgt_ag_option_nodes, len(task_lst))
 
     other_ag_option_nodes = list(set([(x, y) for x in range(size_x) for y in range(size_y)]) - set(static_obss+tgt_ag_start_pos_lst))
-    
-    # Calculate number of other agents based on density
-    if density is None:
-        num_other_agents = 608  # Default value
-    else:
-        # density is a fraction (0.0 to 1.0) of available cells
-        max_available = len(other_ag_option_nodes)
-        num_other_agents = int(max_available * density)
-        num_other_agents = min(num_other_agents, max_available)  # Ensure we don't exceed available cells
-    
+    max_available_nodes = len(other_ag_option_nodes)
+    num_other_agents = _compute_other_agents(
+        size_x,
+        size_y,
+        density_percent,
+        static_obstacles_count=len(static_obss),
+        density_boost=5,
+        max_available=max_available_nodes,
+    )
     other_ag_start_pos_lst = random.sample(other_ag_option_nodes, num_other_agents)
 
     ag_start_pos_lst = tgt_ag_start_pos_lst + other_ag_start_pos_lst
@@ -262,7 +224,7 @@ def eval_env4(plot:bool = False, used_dist:str = 'manh', seed = 168, search_type
     # --------------------------
     # Run
     # --------------------------
-    problem = PHANS(size_x, size_y, static_obstacles=static_obss, used_dist=used_dist, search_type=search_type, weight=w)
+    problem = PHANS(size_x, size_y, static_obstacles=static_obss, used_dist=used_dist,search_type=search_type, weight=w)
     all_path_lst = problem.run_loop(ag_start_pos_lst, task_lst)
     
     # --------------------------
