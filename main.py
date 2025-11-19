@@ -5,7 +5,7 @@ import numpy as np
 import os
 import json
 
-def run_density_experiment(search_type:str='a_star'):
+def run_density_experiment(search_type:str='a_star', weight:float=1.0):
     '''search_type = ('focal', 'a_star', 'bi_a_star')'''
     heuristics = ['manh', 'diagonal', 'euclid', 'weighted']
     densities = list(range(10, 100, 10))
@@ -27,7 +27,7 @@ def run_density_experiment(search_type:str='a_star'):
             for seed in seeds:
                 for heuristic in heuristics:
                     start_time = timer()
-                    all_path_lst = env_func(search_type=search_type, used_dist=heuristic, seed=seed, density_percent=density)
+                    all_path_lst = env_func(search_type=search_type, used_dist=heuristic, seed=seed, density_percent=density, w = weight)
                     elapsed = timer() - start_time
                     makespan = len(all_path_lst)
                     
