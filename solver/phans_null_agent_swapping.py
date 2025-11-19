@@ -2,7 +2,6 @@ import copy
 
 import matplotlib.animation as anm
 import matplotlib.pyplot as plt
-from matplotlib.animation import PillowWriter
 import numpy as np
 
 from solver.a_star import AStarFollowingConflict
@@ -140,7 +139,7 @@ class PHANS:
                 null_agent_pos_lst=self.null_ag_pos_lst,
                 considering_cycle_conflict=False,
                 used_dist = self.used_dist,
-                weight=1.5
+                weight=1.1
             
             )
             solution = env.compute_solution()
@@ -469,7 +468,7 @@ class PHANS:
                     a_star_max_iter=10000,
                     is_dst_add=False,
                     used_dist = self.used_dist,
-                    weight=1.5
+                    weight=1.1
                 )
                 solution = env.compute_solution()
                 mov_obss += [(s["x"], s["y"], s["t"]) for s in solution]
@@ -566,14 +565,13 @@ class PHANS:
         slow_factor: int = 2
     ):
         """
-        Draw an animation for the given routes and save as GIF.
+        Draw an animation for the given routes.
 
         Args:
             animation_name (str): Output file name.
             routes (list[list[tuple[int, int]]]): Sequence of agent positions.
             slow_factor (int): Number of frames per move to interpolate.
         """
-        
         if small_env:
             fig, ax = plt.subplots(figsize=(4.0, 1.25))
         else:
@@ -588,12 +586,9 @@ class PHANS:
             ax.cla()
 
             tgt_color = ["red", "blue", "green", "steelblue", "deeppink", "brown", "orange",
-                        "purple", "olive", "cyan", "lime", "magenta", "yellow", "sandybrown"]
+                         "purple", "olive", "cyan", "lime", "magenta", "yellow", "sandybrown"]
 
             t = int(frame / slow_factor)
-            if t >= len(routes):
-                t = len(routes) - 1
-                
             cur_pos_lst = [routes[t][i] for i in range(len(routes[t]))]
             if t < len(routes) - 1:
                 next_pos_lst = [routes[t + 1][i] for i in range(len(routes[t + 1]))]
@@ -610,87 +605,74 @@ class PHANS:
                 for i in range(len(cur_pos_lst))
             ]
 
-            # Draw grid
-            for x in range(self.size_x):
-                for y in range(self.size_y):
-                    if (x, y) in self.static_obss:
-                        ax.add_patch(plt.Rectangle((x-0.5, y-0.5), 1, 1, 
-                                                facecolor='black', alpha=0.3))
-                    else:
-                        ax.add_patch(plt.Rectangle((x-0.5, y-0.5), 1, 1, 
-                                                facecolor='white', edgecolor='gray', 
-                                                alpha=0.3))
-
-            # Draw agents
             for i in range(len(routes[t])):
                 if i < self.task_len:
-                    # Target agents
                     ax.scatter(
-                        mid_pos_lst[i][0],
+                        mid_pos_lst[i][0] - 0.05,
                         mid_pos_lst[i][1],
-                        s=100,
-                        color=tgt_color[i % len(tgt_color)],
+                        s=56,
+                        color=tgt_color[i],
+                        label="target agent",
                         marker="o",
-                        alpha=0.8,
-                        zorder=3
+                        alpha=0.5,
                     )
-                    # Add agent ID
-                    ax.text(mid_pos_lst[i][0], mid_pos_lst[i][1], str(i), 
-                        ha='center', va='center', fontsize=8, color='white', zorder=4)
-                else:
-                    # Other agents
+                elif i == self.task_len + 1:
                     ax.scatter(
-                        mid_pos_lst[i][0],
+                        mid_pos_lst[i][0] - 0.05,
                         mid_pos_lst[i][1],
-                        s=100,
+                        s=56,
+                        color="grey",
+                        label="obstructing agent",
+                        marker="o",
+                        alpha=0.5,
+                    )
+                else:
+                    ax.scatter(
+                        mid_pos_lst[i][0] - 0.05,
+                        mid_pos_lst[i][1],
+                        s=56,
                         color="grey",
                         marker="o",
-                        alpha=0.6,
-                        zorder=2
+                        alpha=0.5,
                     )
 
-            # Draw target paths
-            if hasattr(self, 'tgt_ag_path_lst_plot') and len(self.tgt_ag_path_lst_plot) > 0:
-                current_plot_index = min(t, len(self.tgt_ag_path_lst_plot) - 1)
-                for i_target, tgt_path in enumerate(self.tgt_ag_path_lst_plot[current_plot_index]):
-                    if i_target < len(tgt_color):
-                        for i in range(len(tgt_path) - 1):
-                            ax.plot(
-                                [tgt_path[i][0], tgt_path[i + 1][0]],
-                                [tgt_path[i][1], tgt_path[i + 1][1]],
-                                color=tgt_color[i_target % len(tgt_color)],
-                                alpha=0.5,
-                                linewidth=2,
-                                zorder=1
-                            )
+            for i in range(len(self.static_obss)):
+                ax.scatter(
+                    self.static_obss[i][0],
+                    self.static_obss[i][1],
+                    s=56,
+                    color="black",
+                    marker="s",
+                )
+
+            for i_target, tgt_path in enumerate(
+                self.tgt_ag_path_lst_plot[min(t, len(self.tgt_ag_path_lst_plot) - 1)]
+            ):
+                for i in range(len(tgt_path) - 1):
+                    ax.plot(
+                        [tgt_path[i][0], tgt_path[i + 1][0]],
+                        [tgt_path[i][1], tgt_path[i + 1][1]],
+                        color=tgt_color[i_target],
+                        alpha=0.5,
+                    )
 
             ax.set_xlim(-0.6, self.size_x - 1 + 0.5)
+            # Make tick labels smaller than default.
+            ax.tick_params(axis="x", labelsize=plt.rcParams["font.size"] / 2)
             ax.set_ylim(-0.55, self.size_y - 1 + 0.55)
-            ax.set(xticks=[], yticks=[])
-            ax.tick_params(bottom=False, left=False, labelbottom=False, labelleft=False)
+            ax.tick_params(axis="y", labelsize=plt.rcParams["font.size"] / 2)
 
-            ax.set_title(f"Step: {t}/{len(routes)-1} | Agents: {len(routes[t])}", fontsize=10)
+            ax.set_title(f"t: {t}")
+            ax.legend(bbox_to_anchor=(1.05, 1), loc="upper left", borderaxespad=0)
 
-            return ax
+            return ax.plot()
 
         if small_env:
             plt.subplots_adjust(left=0.005, right=0.52, bottom=0.01, top=0.8)
         else:
             plt.subplots_adjust(left=0.005, right=0.7, bottom=0.01, top=0.92)
-        
-        # Create animation
         ani = anm.FuncAnimation(
-            fig, update, frames=min(len(routes) * slow_factor, 1000), interval=200, repeat=False
+            fig, update, interval=300, frames=len(routes) * slow_factor, repeat=False
         )
-        
-        # Save as GIF using Pillow
-        try:
-            writer = PillowWriter(fps=5)  # 5 frames per second
-            ani.save(animation_name, writer=writer, dpi=100)
-            print(f"Animation successfully saved as {animation_name}")
-        except Exception as e:
-            print(f"Error saving animation: {e}")
-            # Fallback: save as PNG frames
-            self._save_frames_fallback(routes, animation_name.replace('.gif', '_frames'))
-        
-        plt.close(fig)
+        plt.close()
+        ani.save(animation_name, writer='pillow',fps=8, dpi=300)

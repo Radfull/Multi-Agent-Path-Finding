@@ -2,7 +2,23 @@ import random
 from solver.phans_null_agent_swapping import PHANS
 
 
-def eval_env1(plot:bool = False, used_dist:str = 'manh', seed = 168):                
+def _compute_other_agents(
+    size_x: int,
+    size_y: int,
+    density_percent: int,
+    static_obstacles_count: int = 0,
+    density_boost: int = 0,
+    max_available: int | None = None,
+) -> int:
+    adjusted_density = max(0, density_percent + density_boost)
+    total_slots = int(size_x * size_y * adjusted_density / 100)
+    num_agents = max(0, total_slots - static_obstacles_count)
+    if max_available is not None:
+        num_agents = min(num_agents, max_available)
+    return num_agents
+
+
+def eval_env1(plot:bool = False, used_dist:str = 'manh', seed = 168, density_percent: int = 90):                
     # --------------------------
     # problem definition
     # --------------------------
@@ -18,7 +34,9 @@ def eval_env1(plot:bool = False, used_dist:str = 'manh', seed = 168):
     tgt_ag_start_pos_lst = random.sample(tgt_ag_option_nodes, len(task_lst))
 
     other_ag_option_nodes = list(set([(x, y) for x in range(size_x) for y in range(size_y)]) - set(static_obss+tgt_ag_start_pos_lst))
-    other_ag_start_pos_lst = random.sample(other_ag_option_nodes, 88)
+    max_available_nodes = len(other_ag_option_nodes)
+    num_other_agents = _compute_other_agents(size_x, size_y, density_percent, max_available=max_available_nodes)
+    other_ag_start_pos_lst = random.sample(other_ag_option_nodes, num_other_agents)
 
     ag_start_pos_lst = tgt_ag_start_pos_lst + other_ag_start_pos_lst
 
@@ -37,7 +55,7 @@ def eval_env1(plot:bool = False, used_dist:str = 'manh', seed = 168):
 
     return all_path_lst
 
-def eval_env2(plot:bool = False, used_dist:str = 'manh', seed = 168):                
+def eval_env2(plot:bool = False, used_dist:str = 'manh', seed = 168, density_percent: int = 90):                
     # --------------------------
     # problem definition
     # --------------------------
@@ -56,7 +74,15 @@ def eval_env2(plot:bool = False, used_dist:str = 'manh', seed = 168):
     tgt_ag_start_pos_lst = random.sample(tgt_ag_option_nodes, len(task_lst))
 
     other_ag_option_nodes = list(set([(x, y) for x in range(size_x) for y in range(size_y)]) - set(static_obss+tgt_ag_start_pos_lst))
-    other_ag_start_pos_lst = random.sample(other_ag_option_nodes, 76)
+    max_available_nodes = len(other_ag_option_nodes)
+    num_other_agents = _compute_other_agents(
+        size_x,
+        size_y,
+        density_percent,
+        static_obstacles_count=len(static_obss),
+        max_available=max_available_nodes,
+    )
+    other_ag_start_pos_lst = random.sample(other_ag_option_nodes, num_other_agents)
 
     ag_start_pos_lst = tgt_ag_start_pos_lst + other_ag_start_pos_lst
 
@@ -77,7 +103,7 @@ def eval_env2(plot:bool = False, used_dist:str = 'manh', seed = 168):
     return all_path_lst
 
 
-def eval_env3(plot:bool = False, used_dist:str = 'manh',seed = 168):                
+def eval_env3(plot:bool = False, used_dist:str = 'manh',seed = 168, density_percent: int = 90):                
     # --------------------------
     # problem definition
     # --------------------------
@@ -106,7 +132,15 @@ def eval_env3(plot:bool = False, used_dist:str = 'manh',seed = 168):
     tgt_ag_start_pos_lst = random.sample(tgt_ag_option_nodes, len(task_lst))
 
     other_ag_option_nodes = list(set([(x, y) for x in range(size_x) for y in range(size_y)]) - set(static_obss+tgt_ag_start_pos_lst))
-    other_ag_start_pos_lst = random.sample(other_ag_option_nodes, 698)
+    max_available_nodes = len(other_ag_option_nodes)
+    num_other_agents = _compute_other_agents(
+        size_x,
+        size_y,
+        density_percent,
+        density_boost=5,
+        max_available=max_available_nodes,
+    )
+    other_ag_start_pos_lst = random.sample(other_ag_option_nodes, num_other_agents)
 
     ag_start_pos_lst = tgt_ag_start_pos_lst + other_ag_start_pos_lst
 
@@ -125,7 +159,7 @@ def eval_env3(plot:bool = False, used_dist:str = 'manh',seed = 168):
 
     return all_path_lst
 
-def eval_env4(plot:bool = False, used_dist:str = 'manh', seed = 168):                
+def eval_env4(plot:bool = False, used_dist:str = 'manh', seed = 168, density_percent: int = 90):                
     # --------------------------
     # problem definition
     # --------------------------
@@ -171,7 +205,16 @@ def eval_env4(plot:bool = False, used_dist:str = 'manh', seed = 168):
     tgt_ag_start_pos_lst = random.sample(tgt_ag_option_nodes, len(task_lst))
 
     other_ag_option_nodes = list(set([(x, y) for x in range(size_x) for y in range(size_y)]) - set(static_obss+tgt_ag_start_pos_lst))
-    other_ag_start_pos_lst = random.sample(other_ag_option_nodes, 608)
+    max_available_nodes = len(other_ag_option_nodes)
+    num_other_agents = _compute_other_agents(
+        size_x,
+        size_y,
+        density_percent,
+        static_obstacles_count=len(static_obss),
+        density_boost=5,
+        max_available=max_available_nodes,
+    )
+    other_ag_start_pos_lst = random.sample(other_ag_option_nodes, num_other_agents)
 
     ag_start_pos_lst = tgt_ag_start_pos_lst + other_ag_start_pos_lst
 
