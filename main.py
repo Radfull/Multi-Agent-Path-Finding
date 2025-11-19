@@ -49,7 +49,7 @@ def main():
 # min_time (mixed) : 51
 # min_time (weighted) : 43
 # 3 env
-# min_time (manh): 114
+# min_time (manh): 114 ббаб
 # min_time (euclid): 107
 # min_time (cheb): 103
 # min_time (octile): 103

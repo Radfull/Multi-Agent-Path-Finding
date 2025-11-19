@@ -1,0 +1,19 @@
+Index: main.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>from src.envs import eval_env1, eval_env2, eval_env3, eval_env4\r\n\r\n\r\ndef main():\r\n    dists = ['manh', 'euclid', 'cheb','octile', 'mixed', 'weighted']\r\n    best_counts = [0] * 6\r\n    print('1 env')\r\n\r\n    for s in range(1,11):\r\n        print(str(s) + \" / 10\")\r\n        times = []\r\n        for d in dists:\r\n            times.append(eval_env1(used_dist=d, seed=s))\r\n        m = min(times)\r\n        for i in range(6):\r\n            if times[i] == m:\r\n                best_counts[i] += 1\r\n            \r\n    print(best_counts)\r\n\r\n    # print('1 env') # [31, 44, 48, 46, 31, 46] для 100 тестов сиды 1-100\r\n    # for d in dists:\r\n    #     print(f'min_time ({d}) : {len(eval_env1(used_dist=d))}')\r\n\r\n    # print('2 env') # [37, 49, 47, 48, 37, 48] для 100 тестов сиды 1-100\r\n    # for d in dists:\r\n    #     print(f'min_time ({d}) : {len(eval_env2(used_dist=d))}')\r\n\r\n    # print('3 env') # [6, 0, 3, 1, 6, 1] для 10 тестов сиды 1-10\r\n    # for d in dists:\r\n    #     print(f'min_time ({d}): {len(eval_env3(used_dist=d))}')\r\n\r\n    # print('4 env')\r\n    # for d in dists:\r\n    #     print(f'min_time ({d}): {len(eval_env4(used_dist=d))}')\r\n\r\n# 1 env\r\n# min_time (manh): 27\r\n# min_time (euclid): 27\r\n# min_time (cheb): 28\r\n# min_time (octile): 27\r\n# min_time (mixed): 27\r\n# min_time (weighted): 27\r\n# 2 env\r\n# min_time (manh) : 51\r\n# min_time (euclid) : 43\r\n# min_time (cheb) : 45\r\n# min_time (octile) : 43\r\n# min_time (mixed) : 51\r\n# min_time (weighted) : 43\r\n# 3 env\r\n# min_time (manh): 114\r\n# min_time (euclid): 107\r\n# min_time (cheb): 103\r\n# min_time (octile): 103\r\n# min_time (mixed): 114\r\n# min_time (weighted): 103\r\n# 4 env\r\n# min_time (manh): 143\r\n# min_time (euclid): 134\r\n# min_time (cheb): 131\r\n# min_time (octile): 128\r\n# min_time (mixed): 143\r\n# min_time (weighted): 128\r\n\r\nif __name__ == \"__main__\":\r\n    main()
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/main.py b/main.py
+--- a/main.py	(revision b1e3b66bb2e564dc1f7d3ce508ecb2128f37f980)
++++ b/main.py	(date 1763391156318)
+@@ -10,7 +10,7 @@
+         print(str(s) + " / 10")
+         times = []
+         for d in dists:
+-            times.append(eval_env1(used_dist=d, seed=s))
++            times.append(len(eval_env1(used_dist=d, seed=s)))
+         m = min(times)
+         for i in range(6):
+             if times[i] == m:
