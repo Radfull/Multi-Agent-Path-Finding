@@ -8,6 +8,7 @@ import numpy as np
 from src.search_algorithms.a_star import AStarFollowingConflict
 from src.search_algorithms.bi_a_star import BiAStarFollowingConflict
 from src.search_algorithms.focal_search import FocalSearchFollowingConflict
+from src.search_algorithms.lazy_a_star import LazyAStarFollowingConflict
 
 
 class PHANS:
@@ -17,7 +18,7 @@ class PHANS:
         size_y: int, 
         static_obstacles: list[tuple[int, int]] = None,
         used_dist:str = 'euclid',
-        search_type: str = 'a_star',  # 'a_star' or 'focal'
+        search_type: str = 'a_star',  # 'a_star', 'focal', 'bi_a_star', or 'lazy_a_star'
         weight: float = 1.5     # Weight for focal search suboptimality bound
     ):
         """
@@ -108,6 +109,10 @@ class PHANS:
             common_args["a_star_max_iter"] = a_star_max_iter
             common_args["weight"] = self.weight
             return BiAStarFollowingConflict(**common_args)
+        elif self.search_type == 'lazy_a_star':
+            common_args["weight"] = self.weight
+            common_args["a_star_max_iter"] = a_star_max_iter
+            return LazyAStarFollowingConflict(**common_args)
         else:
             common_args["weight"] = self.weight
             common_args["a_star_max_iter"] = a_star_max_iter

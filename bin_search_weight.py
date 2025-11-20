@@ -5,7 +5,7 @@ from statistics import mean
 import matplotlib.pyplot as plt
 
 
-def evaluate_weight(weight: float, env_func, env_name: str, used_dist: str = 'euclid', seeds: list = None) -> dict:
+def evaluate_weight(weight: float, env_func, env_name: str, used_dist: str = 'euclid', seeds: list = None, search_type: str = "a_star") -> dict:
     """
     Оценивает вес на одной указанной функции среды и всех сидах.
     Возвращает словарь с результатами: time_steps и computation_time для каждой среды и сида.
@@ -25,7 +25,7 @@ def evaluate_weight(weight: float, env_func, env_name: str, used_dist: str = 'eu
     for seed in seeds:
         start_time = time.time()
         try:
-            all_path_lst = env_func(used_dist=used_dist, seed=seed, w=weight)
+            all_path_lst = env_func(used_dist=used_dist, seed=seed, w=weight, search_type=search_type)
             computation_time = time.time() - start_time
             time_steps = len(all_path_lst) if all_path_lst else float('inf')
         except Exception as e:
@@ -74,7 +74,7 @@ def calculate_average_computation_time(results: dict) -> float:
     return mean(all_times)
 
 
-def _cached_weight_eval(weight: float, env_func, env_name: str, cache: dict, used_dist: str, seeds: list) -> dict:
+def _cached_weight_eval(weight: float, env_func, env_name: str, cache: dict, used_dist: str, seeds: list, search_type: str = "a_star") -> dict:
     """
     Helper that evaluates a weight once and caches avg steps + raw results.
     Округляет вес до десятых для корректного кеширования.
@@ -88,7 +88,7 @@ def _cached_weight_eval(weight: float, env_func, env_name: str, cache: dict, use
 
     print(f"\nEvaluating weight = {weight_rounded:.1f}...")
     # Используем округленный вес для вычисления
-    results = evaluate_weight(weight_rounded, env_func, env_name, used_dist, seeds)
+    results = evaluate_weight(weight_rounded, env_func, env_name, used_dist, seeds, search_type=search_type)
     avg_steps = calculate_average_time_steps(results)
     cache[weight_rounded] = {
         'results': results,
@@ -107,7 +107,8 @@ def binary_search_weight(
         seeds: list = None,
         tolerance: float = 0.1,
         max_iterations: int = 20,
-        always_eval_weight_1: bool = False
+        always_eval_weight_1: bool = False,
+        search_type: str = "a_star"
 ) -> dict:
     """
     Бинарный поиск оптимального веса в диапазоне [weight_min, weight_max] для одной функции среды.
@@ -123,6 +124,7 @@ def binary_search_weight(
         tolerance: Точность поиска (по умолчанию 0.1 - до десятых)
         max_iterations: Максимальное количество итераций
         always_eval_weight_1: Если True, всегда вычисляет вес 1.0 для сравнения
+        search_type: Тип алгоритма поиска (например, 'a_star', 'focal', 'bi_a_star')
     """
     if seeds is None:
         seeds = list(range(168, 200))
@@ -134,6 +136,7 @@ def binary_search_weight(
     print(f"Environment function: {env_name}")
     print(f"Using {len(seeds)} seeds: {seeds}")
     print(f"Distance metric: {used_dist}")
+    print(f"Search type: {search_type}")
     print(f"Tolerance: {tolerance}")
     if always_eval_weight_1:
         print("Will evaluate weight 1.0 for comparison")
@@ -143,7 +146,7 @@ def binary_search_weight(
     if always_eval_weight_1 and 1.0 not in all_results:
         weight_1_rounded = round(1.0, 1)
         print(f"\nEvaluating baseline weight = {weight_1_rounded:.1f} for comparison...")
-        _cached_weight_eval(weight_1_rounded, env_func, env_name, all_results, used_dist, seeds)
+        _cached_weight_eval(weight_1_rounded, env_func, env_name, all_results, used_dist, seeds, search_type)
 
     while (weight_max - weight_min) > tolerance and iteration < max_iterations:
         iteration += 1
@@ -164,8 +167,8 @@ def binary_search_weight(
         print(f"Current range: [{weight_min:.1f}, {weight_max:.1f}]")
         print(f"Testing points: left={left_third:.1f}, right={right_third:.1f}")
 
-        left_result = _cached_weight_eval(left_third, env_func, env_name, all_results, used_dist, seeds)
-        right_result = _cached_weight_eval(right_third, env_func, env_name, all_results, used_dist, seeds)
+        left_result = _cached_weight_eval(left_third, env_func, env_name, all_results, used_dist, seeds, search_type)
+        right_result = _cached_weight_eval(right_third, env_func, env_name, all_results, used_dist, seeds, search_type)
 
         if left_result['avg_time_steps'] <= right_result['avg_time_steps']:
             weight_max = right_third
@@ -180,7 +183,7 @@ def binary_search_weight(
     if all_results:
         mid_weight = round((weight_min + weight_max) / 2.0, 1)
         if mid_weight not in all_results:
-            mid_result = _cached_weight_eval(mid_weight, env_func, env_name, all_results, used_dist, seeds)
+            mid_result = _cached_weight_eval(mid_weight, env_func, env_name, all_results, used_dist, seeds, search_type)
         final_best_weight = min(all_results.keys(), key=lambda w: all_results[w]['avg_time_steps'])
         final_best_steps = all_results[final_best_weight]['avg_time_steps']
     else:
@@ -207,9 +210,10 @@ def binary_search_weight(
     }
 
 
-def plot_results(weights: list, avg_times: list, avg_makespans: list, used_dist: str, results_dir: str):
+def plot_results(weights: list, avg_times: list, avg_makespans: list, env_name: str, used_dist: str, results_dir: str):
     """
     Plots graphs showing the relationship between weight and average computation time/makespan.
+    Сохраняет график в файл без показа на экране.
     """
     # Filter out None values
     valid_indices = [i for i, t in enumerate(avg_times) if t is not None and avg_makespans[i] is not None]
@@ -230,7 +234,7 @@ def plot_results(weights: list, avg_times: list, avg_makespans: list, used_dist:
                 edgecolors='#1B4965', linewidths=2, alpha=0.8, zorder=3)
     ax1.set_xlabel('Weight', fontsize=13, fontweight='bold')
     ax1.set_ylabel('Average Computation Time (seconds)', fontsize=13, fontweight='bold')
-    ax1.set_title(f'Average Computation Time vs Weight\n(Distance metric: {used_dist})',
+    ax1.set_title(f'Average Computation Time vs Weight\n(Environment: {env_name}, Distance: {used_dist})',
                   fontsize=14, fontweight='bold', pad=15)
     ax1.grid(True, alpha=0.4, linestyle='--', linewidth=0.8)
     ax1.set_xlim(min(weights_valid) - 0.3, max(weights_valid) + 0.3)
@@ -245,7 +249,7 @@ def plot_results(weights: list, avg_times: list, avg_makespans: list, used_dist:
                 edgecolors='#6B1F3F', linewidths=2, alpha=0.8, zorder=3)
     ax2.set_xlabel('Weight', fontsize=13, fontweight='bold')
     ax2.set_ylabel('Average Makespan (steps)', fontsize=13, fontweight='bold')
-    ax2.set_title(f'Average Makespan vs Weight\n(Distance metric: {used_dist})',
+    ax2.set_title(f'Average Makespan vs Weight\n(Environment: {env_name}, Distance: {used_dist})',
                   fontsize=14, fontweight='bold', pad=15)
     ax2.grid(True, alpha=0.4, linestyle='--', linewidth=0.8)
     ax2.set_xlim(min(weights_valid) - 0.3, max(weights_valid) + 0.3)
@@ -257,16 +261,16 @@ def plot_results(weights: list, avg_times: list, avg_makespans: list, used_dist:
 
     plt.tight_layout()
 
-    # Save the plot
-    plot_path = os.path.join(results_dir, f'weight_analysis_{used_dist}.png')
+    # Save the plot with environment name
+    plot_path = os.path.join(results_dir, f'weight_analysis_{env_name}_{used_dist}.png')
     plt.savefig(plot_path, dpi=300, bbox_inches='tight', facecolor='white')
     print(f"\nGraphs saved to {plot_path}")
+    
+    # Закрываем график, чтобы не показывать на экране
+    plt.close(fig)
 
-    # Show the plot
-    plt.show()
 
-
-def simple_weight_evaluation(used_dist: str = 'euclid', seeds: list = None):
+def simple_weight_evaluation(env_func, env_name: str, used_dist: str = 'euclid', seeds: list = None, search_type: str = "a_star"):
     """
     Simple mode: evaluates only weights 1, 2, 3, 4, 5 without binary search.
     """
@@ -282,6 +286,7 @@ def simple_weight_evaluation(used_dist: str = 'euclid', seeds: list = None):
     print(f"\nEvaluating weights: {fixed_weights}")
     print(f"Using {len(seeds)} seeds: {seeds}")
     print(f"Distance metric: {used_dist}")
+    print(f"Search type: {search_type}")
     print("-" * 80)
 
     all_results = {}
@@ -289,7 +294,7 @@ def simple_weight_evaluation(used_dist: str = 'euclid', seeds: list = None):
     # Evaluate all fixed weights
     for weight in fixed_weights:
         print(f"\nEvaluating weight = {weight:.1f}...")
-        results = evaluate_weight(weight, used_dist, seeds)
+        results = evaluate_weight(weight, env_func, env_name, used_dist, seeds, search_type)
         avg_steps = calculate_average_time_steps(results)
         avg_time = calculate_average_computation_time(results)
         all_results[weight] = {
@@ -306,7 +311,7 @@ def simple_weight_evaluation(used_dist: str = 'euclid', seeds: list = None):
     return all_results, best_weight, best_steps
 
 
-def binary_search_mode(env_func, env_name: str, used_dist: str = 'euclid', seeds: list = None, always_eval_weight_1: bool = False):
+def binary_search_mode(env_func, env_name: str, used_dist: str = 'euclid', seeds: list = None, always_eval_weight_1: bool = False, search_type: str = "a_star"):
     """
     Binary search mode: performs binary search for optimal weight for a single environment function.
     
@@ -316,6 +321,7 @@ def binary_search_mode(env_func, env_name: str, used_dist: str = 'euclid', seeds
         used_dist: Используемая метрика расстояния
         seeds: Список сидов для тестирования
         always_eval_weight_1: Если True, всегда вычисляет вес 1.0 для сравнения
+        search_type: Тип алгоритма поиска (например, 'a_star', 'focal', 'bi_a_star')
     """
     if seeds is None:
         seeds = list(range(168, 172))
@@ -326,6 +332,7 @@ def binary_search_mode(env_func, env_name: str, used_dist: str = 'euclid', seeds
     print(f"Environment function: {env_name}")
     print(f"Using {len(seeds)} seeds: {seeds}")
     print(f"Distance metric: {used_dist}")
+    print(f"Search type: {search_type}")
     print("-" * 80)
 
     # Run binary search
@@ -338,7 +345,8 @@ def binary_search_mode(env_func, env_name: str, used_dist: str = 'euclid', seeds
         seeds=seeds,
         tolerance=0.1,
         max_iterations=20,
-        always_eval_weight_1=always_eval_weight_1
+        always_eval_weight_1=always_eval_weight_1,
+        search_type=search_type
     )
 
     # Convert search results to the format we need
@@ -421,32 +429,15 @@ def save_results(env_name: str, all_results: dict, best_weight: float, best_step
     return output_path
 
 
-def main(env_func, env_name: str = None, use_binary_search: bool = True, always_eval_weight_1: bool = False):
-    """
-    Main function with mode selection.
-
-    Args:
-        env_func: Функция среды (например, eval_env1, eval_env52 и т.д.)
-        env_name: Имя среды для сохранения результатов (если None, используется имя функции)
-        use_binary_search: If True, uses binary search mode. If False, uses simple mode (only weights 1-5).
-        always_eval_weight_1: Если True, всегда вычисляет вес 1.0 для сравнения
-    """
-    # Если env_name не указан, используем имя функции
-    if env_name is None:
-        env_name = env_func.__name__
-    
-    used_dist = 'euclid'
-    seeds = list(range(168, 200))
-    results_dir = 'results'
-    os.makedirs(results_dir, exist_ok=True)
-
+def _process_single_env(env_func, env_name: str, used_dist: str, seeds: list, results_dir: str, 
+                        use_binary_search: bool, always_eval_weight_1: bool, search_type: str = "a_star"):
+    """Вспомогательная функция для обработки одной среды."""
     if use_binary_search:
         all_results, best_weight, best_steps, search_results = binary_search_mode(
-            env_func, env_name, used_dist, seeds, always_eval_weight_1=always_eval_weight_1
+            env_func, env_name, used_dist, seeds, always_eval_weight_1=always_eval_weight_1, search_type=search_type
         )
     else:
-        # Simple mode would need to be updated too, but keeping for compatibility
-        all_results, best_weight, best_steps = simple_weight_evaluation(used_dist, seeds)
+        all_results, best_weight, best_steps = simple_weight_evaluation(env_func, env_name, used_dist, seeds, search_type)
         search_results = None
 
     # Save results
@@ -473,32 +464,141 @@ def main(env_func, env_name: str = None, use_binary_search: bool = True, always_
         print(f"{weight:<10.1f} {data['avg_time_steps']:<20.2f} {data['avg_computation_time']:<20.2f}")
 
     # Plot graphs (saves to results directory)
-    plot_results(weights, avg_times, avg_makespans, used_dist, results_dir)
+    plot_results(weights, avg_times, avg_makespans, env_name, used_dist, results_dir)
+    
+    return {
+        'env_name': env_name,
+        'best_weight': best_weight,
+        'best_avg_time_steps': best_steps,
+        'all_results': all_results
+    }
+
+
+def main(env_func_or_list, env_name_or_list=None, use_binary_search: bool = True, always_eval_weight_1: bool = False, search_type: str="a_star"):
+    """
+    Main function - обрабатывает одну или несколько сред.
+    
+    Args:
+        env_func_or_list: Функция среды или список функций (например, eval_env1 или [eval_env1, eval_env2, ...])
+        env_name_or_list: Имя среды или список имен (если None, используются имена функций)
+        use_binary_search: If True, uses binary search mode. If False, uses simple mode (only weights 1-5).
+        always_eval_weight_1: Если True, всегда вычисляет вес 1.0 для сравнения
+    """
+    used_dist = 'euclid'
+    seeds = list(range(168, 200))
+    results_dir = 'results'
+    os.makedirs(results_dir, exist_ok=True)
+    
+    # Проверяем, передана одна функция или список
+    is_multiple = isinstance(env_func_or_list, list)
+    
+    if is_multiple:
+        # Обработка нескольких сред
+        env_functions = env_func_or_list
+        if env_name_or_list is None:
+            env_names = [func.__name__ for func in env_functions]
+        else:
+            env_names = env_name_or_list if isinstance(env_name_or_list, list) else [env_name_or_list]
+            if len(env_names) != len(env_functions):
+                raise ValueError("Количество имен сред должно совпадать с количеством функций")
+        
+        all_environments_results = {}
+        
+        print("\n" + "=" * 80)
+        print(f"ЗАПУСК ОБРАБОТКИ ДЛЯ {len(env_functions)} СРЕД")
+        print("=" * 80)
+        
+        # Обрабатываем каждую среду по очереди
+        for idx, (env_func, env_name) in enumerate(zip(env_functions, env_names), 1):
+            print("\n" + "#" * 80)
+            print(f"# ОБРАБОТКА СРЕДЫ {idx}/{len(env_functions)}: {env_name}")
+            print("#" * 80 + "\n")
+            
+            try:
+                result = _process_single_env(env_func, env_name, used_dist, seeds, results_dir, 
+                                            use_binary_search, always_eval_weight_1, search_type)
+                all_environments_results[env_name] = result
+                
+                print(f"\n✓ Среда {env_name} успешно обработана")
+                print(f"  Лучший вес: {result['best_weight']:.1f}")
+                print(f"  Среднее количество шагов: {result['best_avg_time_steps']:.2f}")
+                
+            except Exception as e:
+                print(f"\n✗ Ошибка при обработке среды {env_name}: {e}")
+                import traceback
+                traceback.print_exc()
+                all_environments_results[env_name] = {
+                    'error': str(e),
+                    'best_weight': None,
+                    'best_avg_time_steps': None
+                }
+        
+        # Выводим общую сводку для всех сред
+        print("\n" + "=" * 80)
+        print("ОБЩАЯ СВОДКА ПО ВСЕМ СРЕДАМ")
+        print("=" * 80)
+        print(f"{'Среда':<20} {'Лучший вес':<15} {'Ср. шаги':<15} {'Статус':<15}")
+        print("-" * 80)
+        
+        for env_name in env_names:
+            if env_name in all_environments_results:
+                result = all_environments_results[env_name]
+                if 'error' in result:
+                    status = "ОШИБКА"
+                    best_weight = "N/A"
+                    avg_steps = "N/A"
+                else:
+                    status = "OK"
+                    best_weight = f"{result['best_weight']:.1f}"
+                    avg_steps = f"{result['best_avg_time_steps']:.2f}"
+                print(f"{env_name:<20} {best_weight:<15} {avg_steps:<15} {status:<15}")
+        
+        print("=" * 80)
+        print(f"\nВсе результаты сохранены в: {results_dir}/weight_search_results.json")
+        
+        return all_environments_results
+    
+    else:
+        # Обработка одной среды
+        env_func = env_func_or_list
+        env_name = env_name_or_list if env_name_or_list is not None else env_func.__name__
+        
+        return _process_single_env(env_func, env_name, used_dist, seeds, results_dir, 
+                                   use_binary_search, always_eval_weight_1)
 
 
 if __name__ == "__main__":
     # ============================================
-    # ИЗМЕНИТЕ ЭТО: Укажите вашу функцию среды
+    # ИЗМЕНИТЕ ЭТО: Укажите функции сред
     # ============================================
-    # Пример: если вы написали функцию eval_env52, импортируйте её и укажите здесь
-    # from src.envs import eval_env52  # Или откуда вы её импортируете
-    # ENV_FUNC = eval_env52
     
-    # Или используйте существующие функции для примера:
-    from src.envs import eval_env3
-    ENV_FUNC = eval_env3
+    from src.envs import eval_env1, eval_env2, eval_env3, eval_env4
     
-    # Имя среды для сохранения результатов (опционально, по умолчанию будет имя функции)
-    # ENV_NAME = 'env52'  # Можно указать своё имя, например 'env52'
-    ENV_NAME = None  # Если None, будет использовано имя функции
+    # ВАРИАНТ 1: ОДНА СРЕДА
+    # ENV = eval_env3  # Просто укажите функцию
+    
+    # ВАРИАНТ 2: НЕСКОЛЬКО СРЕД
+    ENV = [
+        eval_env1,
+        eval_env2,
+        eval_env3,
+        eval_env4,
+    ]
+    
+    # Имена сред (опционально, если None - используются имена функций)
+    ENV_NAMES = None  # Например: ['env1', 'env2', 'env3', ...] или None
     
     # Режим работы: True для бинарного поиска, False для простого режима (только веса 1-5)
     USE_BINARY_SEARCH = True
     
     # Всегда вычислять вес 1.0 для сравнения
-    ALWAYS_EVAL_WEIGHT_1 = True  # True - будет вычислять вес 1.0 для сравнения
+    ALWAYS_EVAL_WEIGHT_1 = True
+    
+    # Тип алгоритма поиска: 'a_star', 'focal', 'bi_a_star', 'lazy_a_star' и т.д.
+    SEARCH_TYPE = "bi_a_star"  # Измените на нужный тип алгоритма
     
     # ============================================
     
-    main(env_func=ENV_FUNC, env_name=ENV_NAME, use_binary_search=USE_BINARY_SEARCH, always_eval_weight_1=ALWAYS_EVAL_WEIGHT_1)
+    main(env_func_or_list=ENV, env_name_or_list=ENV_NAMES, 
+         use_binary_search=USE_BINARY_SEARCH, always_eval_weight_1=ALWAYS_EVAL_WEIGHT_1, search_type=SEARCH_TYPE)
 
