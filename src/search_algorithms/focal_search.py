@@ -45,18 +45,18 @@ class FocalSearchFollowingConflict():
         start_state = State(0, Location(agent["start"][0], agent["start"][1]))
         goal_state = State(0, Location(agent["goal"][0], agent["goal"][1]))
         self.agent = {"start": start_state, "goal": goal_state}
-
+        
         self.iter = 0
-
+        
         # Cache goal coordinates for faster heuristic computation
         self.goal_x = goal_state.location.x
         self.goal_y = goal_state.location.y
-
+        
         # Cache obstacles by time to avoid repeated computation
         # Use LRU-style cache with size limit
         self._obstacle_cache = {}
         self._obstacle_cache_max_size = 500  # Reduced from 1000
-
+        
         # Pre-compute null agent positions as numpy array if needed
         if self.is_dst_add and len(self.null_agent_pos_lst) > 0:
             self._null_xy_array = np.array(self.null_agent_pos_lst, dtype=np.int32)
@@ -97,24 +97,24 @@ class FocalSearchFollowingConflict():
                 if o[2] < 0 and time >= -o[2]:
                     all_obs.add((o[0], o[1]))
             return self.obstacles | all_obs
-
+        
         # For many obstacles, use cache
         if time in self._obstacle_cache:
             return self._obstacle_cache[time]
-
+        
         all_obs = set()
         for o in self.moving_obstacles:
             if o[2] < 0 and time >= -o[2]:
                 all_obs.add((o[0], o[1]))
         result = self.obstacles | all_obs
-
+        
         # Limit cache size - remove oldest entries if cache is too large
         if len(self._obstacle_cache) >= self._obstacle_cache_max_size:
             sorted_times = sorted(self._obstacle_cache.keys())
             remove_count = len(sorted_times) // 5
             for t in sorted_times[:remove_count]:
                 del self._obstacle_cache[t]
-
+        
         self._obstacle_cache[time] = result
         return result
 
@@ -192,33 +192,33 @@ class FocalSearchFollowingConflict():
         dx = state.location.x - self.goal_x
         dy = state.location.y - self.goal_y
         return sqrt(dx * dx + dy * dy)
-
+    
     def __chebyshev_dist(self, state: State):
         return max(abs(state.location.x - self.goal_x), abs(state.location.y - self.goal_y))
-
+    
     def __octile_dist(self, state: State):
         dx = abs(state.location.x - self.goal_x)
         dy = abs(state.location.y - self.goal_y)
         return max(dx, dy) + (sqrt(2) - 1) * min(dx, dy)
-
+    
     def __mixed_max(self, state: State):
         return max(self.__manhattan_dist(state), self.__chebyshev_dist(state))
-
+    
     def __weighted_mixed(self, state: State, alpha=0.5):
         return alpha * self.__manhattan_dist(state) + (1 - alpha) * self.__chebyshev_dist(state)
-
+    
     def __diagonal_dist(self, state: State):
         dx = abs(state.location.x - self.goal_x)
         dy = abs(state.location.y - self.goal_y)
-        D = 1.0
-        D2 = sqrt(2)
+        D = 1.0  
+        D2 = sqrt(2) 
         return D * (dx + dy) + (D2 - 2 * D) * min(dx, dy)
 
-
+    
     def _admissible_heuristic(self, state: State) -> float:
         # Use cached goal coordinates (no need to pass goal parameter)
         if self.used_dist == 'euclid':
-            return self.__euclid_dist(state)
+            return self.__euclid_dist(state)            
         elif self.used_dist == 'cheb':
             return self.__chebyshev_dist(state)
         elif self.used_dist == 'octile':
@@ -246,15 +246,15 @@ class FocalSearchFollowingConflict():
     def _secondary_heuristic(self, state: State) -> float:
         # Use cached goal coordinates
         primary_h = self._admissible_heuristic(state)
-
+        
         time_penalty = state.time * 0.01
-
+        
         obstacle_penalty = 0
         for dx, dy in [(0,1), (1,0), (0,-1), (-1,0)]:
             nx, ny = state.location.x + dx, state.location.y + dy
             if (nx, ny) in self.obstacles:
                 obstacle_penalty += 0.05
-
+        
         return primary_h + time_penalty + obstacle_penalty
 
     def _search(self) -> list[State]:
@@ -276,7 +276,7 @@ class FocalSearchFollowingConflict():
         heapq.heappush(
             open_heap, (f_score[initial_state], h_score, next(index), initial_state)
         )
-
+        
         focal_set = []
         min_f_score = f_score[initial_state]
         heapq.heappush(
@@ -290,17 +290,17 @@ class FocalSearchFollowingConflict():
 
             if open_heap:
                 current_min_f = open_heap[0][0]
-
-                if current_min_f > min_f_score * 1.2:
+                
+                if current_min_f > min_f_score * 1.2:  
                     min_f_score = current_min_f
                     focal_set = []
                     in_focal.clear()
                     index_focal = count(0)
-
+                    
                     for (f_val, h_val, idx, node) in open_heap:
                         if f_val <= self.w * min_f_score:
                             heapq.heappush(
-                                focal_set,
+                                focal_set, 
                                 (self._secondary_heuristic(node), next(index_focal), node)
                             )
                             in_focal.add(node)
@@ -312,7 +312,7 @@ class FocalSearchFollowingConflict():
                     if node in open_set and node in in_focal:
                         current = node
                         break
-
+                
                 if current is None:
                     focal_set = []
                     in_focal.clear()
@@ -325,7 +325,7 @@ class FocalSearchFollowingConflict():
 
             open_set.discard(current)
             in_focal.discard(current)
-
+            
 
 
             if self._is_at_goal(current):
@@ -353,18 +353,18 @@ class FocalSearchFollowingConflict():
                 if neighbor not in open_set:
                     # Новый узел
                     open_set.add(neighbor)
-                    came_from[neighbor] = current
+                    came_from[neighbor] = current 
                     g_score[neighbor] = tentative_g_score
                     h_score = self._admissible_heuristic(neighbor)
                     new_f_score = tentative_g_score + h_score + dst_add
                     f_score[neighbor] = new_f_score
-
+                    
                     # Добавляем в OPEN
                     heapq.heappush(
-                        open_heap,
+                        open_heap, 
                         (new_f_score, h_score, next(index), neighbor)
                     )
-
+                    
                     # Добавляем в FOCAL если удовлетворяет условию
                     if new_f_score <= self.w * min_f_score:
                         heapq.heappush(
@@ -372,32 +372,32 @@ class FocalSearchFollowingConflict():
                             (self._secondary_heuristic(neighbor), next(index), neighbor)
                         )
                         in_focal.add(neighbor)
-
+                        
                 elif tentative_g_score < g_score.setdefault(neighbor, float("inf")):
                     # Обновление существующего узла
                     came_from[neighbor] = current
                     g_score[neighbor] = tentative_g_score
                     h_score = self._admissible_heuristic(neighbor)
                     new_f_score = tentative_g_score + h_score + dst_add
-
+                    
                     # Обновляем OPEN - просто добавляем новую запись (старая будет проигнорирована при pop)
                     heapq.heappush(
-                        open_heap,
+                        open_heap, 
                         (new_f_score, h_score, next(index), neighbor)
                     )
-
+                    
                     # Обновляем FOCAL
                     if neighbor in in_focal:
                         # Помечаем для удаления из FOCAL
                         in_focal.discard(neighbor)
-
+                    
                     if new_f_score <= self.w * min_f_score:
                         heapq.heappush(
                             focal_set,
                             (self._secondary_heuristic(neighbor), next(index), neighbor)
                         )
                         in_focal.add(neighbor)
-
+                        
                     f_score[neighbor] = new_f_score
 
         return []
@@ -406,10 +406,10 @@ class FocalSearchFollowingConflict():
         local_solution = self._search()
         if not local_solution:
             return {}
-
+        
         path_dict_list = [
             {"t": state.time, "x": state.location.x, "y": state.location.y}
             for state in local_solution
         ]
-
+        
         return path_dict_list

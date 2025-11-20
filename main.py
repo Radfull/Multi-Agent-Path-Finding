@@ -188,7 +188,7 @@ def plot_alg_time_steps(env_name: str, seeds: list[int], densities: list[float])
 '''
 def main():
 
-    run_density_experiment(search_type='focal')
+    run_density_experiment(search_type='a_star')
     # plot_alg_time_steps('env2',seeds = [1,2,3,4,5], densities=[0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9])
 
     # проверить 9 сид
