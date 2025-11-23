@@ -114,7 +114,7 @@ class PHANS:
             common_args["weight"] = self.weight
             return BiAStarFollowingConflict(**common_args)
         else:
-            common_args["weight"] = self.weight
+            # common_args["weight"] = self.weight
             common_args["a_star_max_iter"] = a_star_max_iter
             return AStarFollowingConflict(**common_args)
 

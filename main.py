@@ -9,12 +9,14 @@ import time
 start = time.time()
 def run_density_experiment(search_type:str='focal', weight:float=1.0):
     '''search_type = ('focal', 'a_star', 'bi_a_star')'''
-    heuristics = ['manh']
+    heuristics = ['manh', 'diagonal']
     densities = list(range(10, 100, 10))
-    # seeds = list(range(168, 171))
-    seeds = [169,170]
+    seeds = list(range(168, 174))
+    # seeds = [169,170]
     envs = [
-        ('env3', eval_env3),
+        # ('env1', eval_env1),
+        # # ('env2', eval_env2),
+        # ('env3', eval_env3),
         ('env4', eval_env4)
     ]
     
@@ -36,7 +38,6 @@ def run_density_experiment(search_type:str='focal', weight:float=1.0):
                     results[env_name][density][heuristic]['runtime'].append(elapsed)
                     
                     print(f'{env_name} dens={density}% seed={seed} dist={heuristic}: steps={makespan}, runtime={elapsed:.4f}s')
-    '''
     averages = {}
     for env_name in results:
         averages[env_name] = {}
@@ -94,6 +95,121 @@ def run_density_experiment(search_type:str='focal', weight:float=1.0):
     plt.show()
 
 
+def run_a_star_vs_focal_density(weight: float = 1.0, focal_heuristics=None):
+    """Строим 4 графика (по окружению) с двумя subplot'ами: makespan и runtime.
+    На каждом subplot сравниваем оригинальный A* (манхеттен) и Focal Search с заданными эвристиками."""
+    focal_heuristics = focal_heuristics or ['diagonal']
+    baseline_algo = ('a_star', 'manh')
+    densities = list(range(10, 100, 10))
+    seeds = list(range(168, 174))
+    envs = [
+        ('env1', eval_env1),
+        ('env2', eval_env2),
+        ('env3', eval_env3),
+        ('env4', eval_env4)
+    ]
+    
+    results = {}
+    for env_name, env_func in envs:
+        results[env_name] = {}
+        for density in densities:
+            results[env_name][density] = {
+                'a_star': {'makespan': [], 'runtime': []},
+                'focal': {
+                    heuristic: {'makespan': [], 'runtime': []}
+                    for heuristic in focal_heuristics
+                }
+            }
+            for seed in seeds:
+                start_time = timer()
+                baseline_paths = env_func(
+                    search_type=baseline_algo[0],
+                    used_dist=baseline_algo[1],
+                    seed=seed,
+                    density_percent=density,
+                    w=1.0
+                )
+                elapsed = timer() - start_time
+                results[env_name][density]['a_star']['makespan'].append(len(baseline_paths))
+                results[env_name][density]['a_star']['runtime'].append(elapsed)
+                print(f'{env_name} dens={density}% seed={seed}: A* steps={len(baseline_paths)}, runtime={elapsed:.4f}s')
+                
+                for heuristic in focal_heuristics:
+                    start_time = timer()
+                    focal_paths = env_func(
+                        search_type='focal',
+                        used_dist=heuristic,
+                        seed=seed,
+                        density_percent=density,
+                        w=weight
+                    )
+                    elapsed = timer() - start_time
+                    results[env_name][density]['focal'][heuristic]['makespan'].append(len(focal_paths))
+                    results[env_name][density]['focal'][heuristic]['runtime'].append(elapsed)
+                    print(f'{env_name} dens={density}% seed={seed}: Focal({heuristic}) steps={len(focal_paths)}, runtime={elapsed:.4f}s')
+    
+    averages = {}
+    for env_name in results:
+        averages[env_name] = {}
+        for density in densities:
+            averages[env_name][density] = {
+                'a_star': {
+                    'makespan': float(np.mean(results[env_name][density]['a_star']['makespan'])),
+                    'runtime': float(np.mean(results[env_name][density]['a_star']['runtime']))
+                },
+                'focal': {}
+            }
+            for heuristic in focal_heuristics:
+                focal_stats = results[env_name][density]['focal'][heuristic]
+                averages[env_name][density]['focal'][heuristic] = {
+                    'makespan': float(np.mean(focal_stats['makespan'])),
+                    'runtime': float(np.mean(focal_stats['runtime']))
+                }
+    
+    results_dir = 'results'
+    os.makedirs(results_dir, exist_ok=True)
+    output_path = os.path.join(results_dir, 'a_star_vs_focal_density_metrics.json')
+    payload = {
+        'baseline': baseline_algo,
+        'focal_heuristics': focal_heuristics,
+        'densities': densities,
+        'seeds': seeds,
+        'raw_results': results,
+        'averages': averages
+    }
+    with open(output_path, 'w', encoding='utf-8') as f:
+        json.dump(payload, f, ensure_ascii=False, indent=2)
+    print(f'Density metrics saved to {output_path}')
+    
+    for env_name, _ in envs:
+        name = env_name
+        for heuristic in focal_heuristics:
+            fig, axes = plt.subplots(1, 2, figsize=(14, 5), sharex=True)
+            metrics = ['makespan', 'runtime']
+            ylabels = ['Average makespan (steps)', 'Average runtime (s)']
+            for ax, metric, ylabel in zip(axes, metrics, ylabels):
+                baseline_series = [
+                    averages[name][density]['a_star'][metric] for density in densities
+                ]
+                focal_series = [
+                    averages[name][density]['focal'][heuristic][metric] for density in densities
+                ]
+                ax.plot(densities, baseline_series, marker='o', linewidth=2, label='A* (manh)')
+                ax.plot(densities, focal_series, marker='o', label=f'Focal ({heuristic})')
+                ax.set_title(f'{metric.capitalize()} vs density')
+                ax.set_ylabel(ylabel)
+                ax.set_xlabel('Environment density (%)')
+                ax.grid(True, alpha=0.3)
+                ax.legend()
+            fig.suptitle(f'{name.upper()} - A* vs Focal ({heuristic})')
+            plt.tight_layout(rect=(0, 0, 1, 0.95))
+            path = f'{name}_{heuristic}_a_star_vs_focal.png'
+            plt.savefig(path, dpi=300, bbox_inches='tight')
+            print(f'Saved {path}')
+    
+    plt.show()
+
+'''
 def plot_alg_time_steps(env_name: str, seeds: list[int], densities: list[float]):
     """
     Plot comparison of different search algorithms across different densities.
@@ -186,9 +302,12 @@ def plot_alg_time_steps(env_name: str, seeds: list[int], densities: list[float])
     plt.tight_layout()
     plt.show()
 '''
-def main():
 
-    run_density_experiment(search_type='a_star')
+
+
+def main():
+    # run_density_experiment(search_type='a_star')
+    run_a_star_vs_focal_density()
     # plot_alg_time_steps('env2',seeds = [1,2,3,4,5], densities=[0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9])
 
     # проверить 9 сид

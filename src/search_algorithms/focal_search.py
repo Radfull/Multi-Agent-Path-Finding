@@ -53,9 +53,8 @@ class FocalSearchFollowingConflict():
         self.goal_y = goal_state.location.y
         
         # Cache obstacles by time to avoid repeated computation
-        # Use LRU-style cache with size limit
         self._obstacle_cache = {}
-        self._obstacle_cache_max_size = 500  # Reduced from 1000
+        self._obstacle_cache_max_size = 500
         
         # Pre-compute null agent positions as numpy array if needed
         if self.is_dst_add and len(self.null_agent_pos_lst) > 0:
@@ -63,30 +62,24 @@ class FocalSearchFollowingConflict():
         else:
             self._null_xy_array = None
 
-    def _get_neighbors(self, state: State) -> list[State]:
+    def _get_neighbors_lazy(self, state: State) -> list[State]:
+        """LAZY VERSION: Generate all possible neighbors without validation"""
         neighbors = []
-
+        
+        # Generate all possible moves without checking validity
         # Wait action
-        n = State(state.time + 1, state.location)
-        if self._state_valid(n) and self._transition_valid(state, n):
-            neighbors.append(n)
+        neighbors.append(State(state.time + 1, state.location))
         # Up action
-        n = State(state.time + 1, Location(state.location.x, state.location.y + 1))
-        if self._state_valid(n) and self._transition_valid(state, n):
-            neighbors.append(n)
+        neighbors.append(State(state.time + 1, Location(state.location.x, state.location.y + 1)))
         # Down action
-        n = State(state.time + 1, Location(state.location.x, state.location.y - 1))
-        if self._state_valid(n) and self._transition_valid(state, n):
-            neighbors.append(n)
+        neighbors.append(State(state.time + 1, Location(state.location.x, state.location.y - 1)))
         # Left action
-        n = State(state.time + 1, Location(state.location.x - 1, state.location.y))
-        if self._state_valid(n) and self._transition_valid(state, n):
-            neighbors.append(n)
+        neighbors.append(State(state.time + 1, Location(state.location.x - 1, state.location.y)))
         # Right action
-        n = State(state.time + 1, Location(state.location.x + 1, state.location.y))
-        if self._state_valid(n) and self._transition_valid(state, n):
-            neighbors.append(n)
+        neighbors.append(State(state.time + 1, Location(state.location.x + 1, state.location.y)))
+        
         return neighbors
+
 
     def _get_all_obstacles(self, time: int) -> set[tuple[int, int]]:
         # Cache obstacles by time - but only if we have many moving obstacles
@@ -119,6 +112,7 @@ class FocalSearchFollowingConflict():
         return result
 
     def _state_valid(self, state: State) -> bool:
+        """Check if state is valid (boundaries and obstacles)"""
         return (
             state.location.x >= 0
             and state.location.x < self.dimension[0]
@@ -145,6 +139,7 @@ class FocalSearchFollowingConflict():
         return False
 
     def _transition_valid(self, state_cur: State, state_next: State) -> bool:
+        """Check if transition between states is valid"""
         if (state_next.location.x, state_next.location.y, state_next.time) in (
             self.moving_obstacles
         ):
@@ -164,6 +159,7 @@ class FocalSearchFollowingConflict():
             state_cur.location.y,
         ) in self.moving_obstacle_edges:
             return False
+        
         # Cycle conflicts against moving obstacle (without considering time)
         if self.considering_cycle_conflict and len(self.moving_obstacle_edges) > 0:
             cur_pos_lst = [(state_cur.location.x, state_cur.location.y)] + [
@@ -184,8 +180,18 @@ class FocalSearchFollowingConflict():
 
         return True
 
+
+    def _is_valid_node(self, state: State, parent: State = None) -> bool:
+        """LAZY: Combined validation check used when node is popped from OPEN"""
+        if not self._state_valid(state):
+            return False
+        
+        if parent is not None and not self._transition_valid(parent, state):
+            return False
+            
+        return True
+
     def __manhattan_dist(self, state: State):
-        # Use cached goal coordinates
         return abs(state.location.x - self.goal_x) + abs(state.location.y - self.goal_y)
 
     def __euclid_dist(self, state: State):
@@ -214,9 +220,7 @@ class FocalSearchFollowingConflict():
         D2 = sqrt(2) 
         return D * (dx + dy) + (D2 - 2 * D) * min(dx, dy)
 
-    
     def _admissible_heuristic(self, state: State) -> float:
-        # Use cached goal coordinates (no need to pass goal parameter)
         if self.used_dist == 'euclid':
             return self.__euclid_dist(state)            
         elif self.used_dist == 'cheb':
@@ -244,20 +248,17 @@ class FocalSearchFollowingConflict():
         return total_path[::-1]
 
     def _secondary_heuristic(self, state: State) -> float:
-        # Use cached goal coordinates
         primary_h = self._admissible_heuristic(state)
-        
         time_penalty = state.time * 0.01
-        
         obstacle_penalty = 0
         for dx, dy in [(0,1), (1,0), (0,-1), (-1,0)]:
             nx, ny = state.location.x + dx, state.location.y + dy
             if (nx, ny) in self.obstacles:
                 obstacle_penalty += 0.05
-        
         return primary_h + time_penalty + obstacle_penalty
 
     def _search(self) -> list[State]:
+        """LAZY A* IMPLEMENTATION"""
         initial_state = self.agent["start"]
         step_cost = 1
 
@@ -288,6 +289,8 @@ class FocalSearchFollowingConflict():
         while open_set and (self.focal_max_iter == -1 or self.iter < self.focal_max_iter):
             self.iter = self.iter + 1
 
+
+            # Update focal set if needed
             if open_heap:
                 current_min_f = open_heap[0][0]
                 
@@ -305,6 +308,7 @@ class FocalSearchFollowingConflict():
                             )
                             in_focal.add(node)
 
+            # LAZY: Select node from focal set or open heap
             current = None
             if focal_set:
                 while focal_set:
@@ -323,17 +327,23 @@ class FocalSearchFollowingConflict():
             if current is None:
                 break
 
+            # LAZY: Remove from open sets
             open_set.discard(current)
             in_focal.discard(current)
-            
 
+            # LAZY: Check validity only when node is popped
+            parent = came_from.get(current)
+            if not self._is_valid_node(current, parent):
+                # Skip invalid node and continue
+                continue
 
             if self._is_at_goal(current):
                 return self._reconstruct_path(came_from, current)
 
             closed_set.add(current)
 
-            neighbor_list = self._get_neighbors(current)
+            # LAZY: Generate all neighbors without validation
+            neighbor_list = self._get_neighbors_lazy(current)
 
             for neighbor in neighbor_list:
                 if neighbor in closed_set:
@@ -343,15 +353,14 @@ class FocalSearchFollowingConflict():
 
                 dst_add = 0
                 if self.is_dst_add and self._null_xy_array is not None:
-                    # Optimized: use pre-computed numpy array and vectorized operations
                     nx, ny = neighbor.location.x, neighbor.location.y
-                    # Vectorized Manhattan distance computation
                     dst_to_null = np.abs(self._null_xy_array - np.array([nx, ny])).sum(axis=1).min()
                     if dst_to_null > 0 and dst_to_null > tentative_g_score:
                         dst_add = dst_to_null - tentative_g_score
 
+
                 if neighbor not in open_set:
-                    # Новый узел
+                    # LAZY: Add to open set without validation
                     open_set.add(neighbor)
                     came_from[neighbor] = current 
                     g_score[neighbor] = tentative_g_score
@@ -359,13 +368,11 @@ class FocalSearchFollowingConflict():
                     new_f_score = tentative_g_score + h_score + dst_add
                     f_score[neighbor] = new_f_score
                     
-                    # Добавляем в OPEN
                     heapq.heappush(
                         open_heap, 
                         (new_f_score, h_score, next(index), neighbor)
                     )
                     
-                    # Добавляем в FOCAL если удовлетворяет условию
                     if new_f_score <= self.w * min_f_score:
                         heapq.heappush(
                             focal_set,
@@ -374,21 +381,18 @@ class FocalSearchFollowingConflict():
                         in_focal.add(neighbor)
                         
                 elif tentative_g_score < g_score.setdefault(neighbor, float("inf")):
-                    # Обновление существующего узла
+                    # LAZY: Update without revalidation
                     came_from[neighbor] = current
                     g_score[neighbor] = tentative_g_score
                     h_score = self._admissible_heuristic(neighbor)
                     new_f_score = tentative_g_score + h_score + dst_add
                     
-                    # Обновляем OPEN - просто добавляем новую запись (старая будет проигнорирована при pop)
                     heapq.heappush(
                         open_heap, 
                         (new_f_score, h_score, next(index), neighbor)
                     )
                     
-                    # Обновляем FOCAL
                     if neighbor in in_focal:
-                        # Помечаем для удаления из FOCAL
                         in_focal.discard(neighbor)
                     
                     if new_f_score <= self.w * min_f_score:
