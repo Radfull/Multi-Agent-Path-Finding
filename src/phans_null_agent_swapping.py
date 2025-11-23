@@ -3,7 +3,6 @@ import copy
 import matplotlib.animation as anm
 import matplotlib.pyplot as plt
 from matplotlib.animation import PillowWriter
-import numpy as np
 
 from src.search_algorithms.a_star import AStarFollowingConflict
 from src.search_algorithms.bi_a_star import BiAStarFollowingConflict
@@ -12,13 +11,13 @@ from src.search_algorithms.focal_search import FocalSearchFollowingConflict
 
 class PHANS:
     def __init__(
-        self, 
-        size_x: int, 
-        size_y: int, 
-        static_obstacles: list[tuple[int, int]] = None,
-        used_dist:str = 'euclid',
-        search_type: str = 'a_star',  # 'a_star', 'focal', 'bi_a_star'
-        weight: float = 1.5     # Weight for focal search suboptimality bound
+            self,
+            size_x: int,
+            size_y: int,
+            static_obstacles: list[tuple[int, int]] = None,
+            used_dist: str = 'euclid',
+            search_type: str = 'a_star',  # 'a_star', 'focal', 'bi_a_star'
+            weight: float = 1.5  # Weight for focal search suboptimality bound
     ):
         """
         A grid environment where multiple agents move while avoiding static and
@@ -66,15 +65,20 @@ class PHANS:
         )
 
     def _get_closest_null_ag_pos(
-        self, 
-        key_pos: tuple[int, int]
+            self,
+            key_pos: tuple[int, int]
     ) -> None:
         """Return index and position of the closest null agent to key_pos."""
         self._update_null_ag_pos_lst()
-        distances = np.abs(np.array(self.null_ag_pos_lst) - np.array(key_pos)).sum(
-            axis=1
-        )
-        min_index = np.argmin(distances)
+        if len(self.null_ag_pos_lst) == 0:
+            return None, None
+        
+        # Simple Manhattan distance calculation (Python is fast enough for this)
+        distances = [
+            abs(pos[0] - key_pos[0]) + abs(pos[1] - key_pos[1])
+            for pos in self.null_ag_pos_lst
+        ]
+        min_index = distances.index(min(distances))
         return min_index, self.null_ag_pos_lst[min_index]
 
     def _update_goal_ag(self) -> None:
@@ -83,11 +87,11 @@ class PHANS:
             i_tgt_ag
             for i_tgt_ag in range(self.task_len)
             if self.tgt_cur_steps[i_tgt_ag]
-            == len(self.tgt_ag_path_lst[i_tgt_ag]) - 1
+               == len(self.tgt_ag_path_lst[i_tgt_ag]) - 1
         ]
 
-    def _create_search_algorithm(self, ag: dict, obstacles: set, moving_obstacles: list, 
-                               moving_obstacle_edges: list, a_star_max_iter: int) -> object:
+    def _create_search_algorithm(self, ag: dict, obstacles: set, moving_obstacles: list,
+                                 moving_obstacle_edges: list, a_star_max_iter: int) -> object:
         """Create the appropriate search algorithm instance based on search_type."""
         common_args = {
             "dimension": (self.size_x, self.size_y),
@@ -100,7 +104,7 @@ class PHANS:
             "considering_cycle_conflict": False,
             "used_dist": self.used_dist
         }
-        
+
         if self.search_type == 'focal':
             common_args["focal_max_iter"] = a_star_max_iter
             return FocalSearchFollowingConflict(**common_args, w=self.weight)
@@ -109,11 +113,10 @@ class PHANS:
             common_args["weight"] = self.weight
             return BiAStarFollowingConflict(**common_args)
         else:
-            common_args["weight"] = self.weight
+            # common_args["weight"] = self.weight
             common_args["a_star_max_iter"] = a_star_max_iter
             return AStarFollowingConflict(**common_args)
-        
-        
+
     def _is_num_of_obs_agents_on_path_increased(self) -> bool:
         """
         Check whether the number of obstructing agents along each target path
@@ -142,9 +145,9 @@ class PHANS:
         return False
 
     def _search_target_paths(
-        self, 
-        ags: list[dict], 
-        a_star_max_iter: int = -1
+            self,
+            ags: list[dict],
+            a_star_max_iter: int = -1
     ) -> tuple[bool, list]:
         """
         Run PP to find paths for target agents.
@@ -196,10 +199,10 @@ class PHANS:
         return True, solution_dict_all
 
     def _init_loop(
-        self, 
-        ag_start_pos_lst: list[tuple[int, int]], 
-        task_lst: list[tuple[int, int]], 
-        a_star_max_iter: int = -1
+            self,
+            ag_start_pos_lst: list[tuple[int, int]],
+            task_lst: list[tuple[int, int]],
+            a_star_max_iter: int = -1
     ) -> None:
         """
         Initialization loop:
@@ -255,11 +258,11 @@ class PHANS:
         # print("---------------------------------------------")
 
     def run_loop(
-        self, 
-        ag_start_pos_lst: list[tuple[int, int]], 
-        task_lst: list[tuple[int, int]], 
-        a_star_max_iter: int = -1, 
-        max_loop: int = 300
+            self,
+            ag_start_pos_lst: list[tuple[int, int]],
+            task_lst: list[tuple[int, int]],
+            a_star_max_iter: int = -1,
+            max_loop: int = 300
     ) -> list[list[tuple[int, int]]]:
         """
         Move agents step-by-step following the target paths.
@@ -278,7 +281,7 @@ class PHANS:
         # -----------------------------------
         # 2. Evacuate obstructing agents and move target agents
         # -----------------------------------
-        
+
         # Initialize
         all_path_lst = [copy.deepcopy(self.ag_cur_pos_lst)]
         self.tgt_cur_steps = [0] * len(self.tgt_ag_path_lst)
@@ -286,24 +289,24 @@ class PHANS:
         loop = 0
         self._update_goal_ag()
         tgt_ags_cur_pos_lst = self.ag_cur_pos_lst[: self.task_len]
-        
+
         for i_tgt_ag in [i for i in range(self.task_len) if i not in self.goal_ag_idx_lst]:
             self.tgt_cur_steps[i_tgt_ag] = (
-                len(self.tgt_ag_path_lst[i_tgt_ag])
-                - self.tgt_ag_path_lst[i_tgt_ag][::-1].index(tgt_ags_cur_pos_lst[i_tgt_ag])
-                - 1
+                    len(self.tgt_ag_path_lst[i_tgt_ag])
+                    - self.tgt_ag_path_lst[i_tgt_ag][::-1].index(tgt_ags_cur_pos_lst[i_tgt_ag])
+                    - 1
             )
 
         # Start loop
         while (
-            any(
-                self.tgt_cur_steps[i] < len(self.tgt_ag_path_lst[i]) - 1
-                for i in range(self.task_len)
-            )
-            and loop < max_loop
+                any(
+                    self.tgt_cur_steps[i] < len(self.tgt_ag_path_lst[i]) - 1
+                    for i in range(self.task_len)
+                )
+                and loop < max_loop
         ):
             # Identify obstructing agents
-            
+
             # next blocking agents on target paths
             blocking_ag_pos_lst = [] 
             # their remaining distance along the blocked target’s path to its goal
@@ -312,16 +315,16 @@ class PHANS:
             for i_tgt_ag in range(self.task_len):
                 if self.tgt_cur_steps[i_tgt_ag] < len(self.tgt_ag_path_lst[i_tgt_ag]) - 1:
                     next_tgt_pos_lst = self.tgt_ag_path_lst[i_tgt_ag][
-                        self.tgt_cur_steps[i_tgt_ag] + 1 :
-                    ]
+                                       self.tgt_cur_steps[i_tgt_ag] + 1:
+                                       ]
 
                     # Get the next blocking agent position
                     for pos in next_tgt_pos_lst:
                         if pos in self.ag_cur_pos_lst and pos not in tgt_ags_cur_pos_lst:
                             dst_to_goal = (
-                                len(self.tgt_ag_path_lst[i_tgt_ag])
-                                - self.tgt_ag_path_lst[i_tgt_ag].index(pos)
-                                + 1
+                                    len(self.tgt_ag_path_lst[i_tgt_ag])
+                                    - self.tgt_ag_path_lst[i_tgt_ag].index(pos)
+                                    + 1
                             )
                             if pos not in blocking_ag_pos_lst:
                                 blocking_ag_pos_lst.append(pos)
@@ -369,11 +372,11 @@ class PHANS:
                 tgt_ag_next_pos = self.tgt_ag_path_lst[i_tgt_ag][self.tgt_cur_steps[i_tgt_ag] + 1]
                 from_idx = self.tgt_cur_steps[j_tgt_ag]
                 high_priority_blocking_ag_pos_lst += self.tgt_ag_path_lst[j_tgt_ag][
-                    from_idx : min(
-                        len(self.tgt_ag_path_lst[j_tgt_ag]),
-                        self.tgt_ag_path_lst[j_tgt_ag].index(tgt_ag_next_pos) + 2,
-                    )
-                ][::-1]
+                                                     from_idx: min(
+                                                         len(self.tgt_ag_path_lst[j_tgt_ag]),
+                                                         self.tgt_ag_path_lst[j_tgt_ag].index(tgt_ag_next_pos) + 2,
+                                                     )
+                                                     ][::-1]
 
             for pos in high_priority_blocking_ag_pos_lst:
                 if pos in blocking_ag_pos_lst:
@@ -408,16 +411,13 @@ class PHANS:
 
                     if bag_pos in self.tgt_ag_path_lst[i_tgt_ag]:
                         bag_idx_on_tgt_ag_path = self.tgt_ag_path_lst[i_tgt_ag].index(bag_pos)
+                        tgt_cur_pos = self.tgt_ag_path_lst[i_tgt_ag][self.tgt_cur_steps[i_tgt_ag]]
                         for pos in self.tgt_ag_path_lst[i_tgt_ag][bag_idx_on_tgt_ag_path:]:
-                            dst_from_null_to_tgt = np.sum(
-                                np.abs(np.array(pos) 
-                                       - np.array(self.tgt_ag_path_lst[i_tgt_ag]\
-                                           [self.tgt_cur_steps[i_tgt_ag]])
-                                )
-                            )
+                            # Simple Manhattan distance (Python is fast enough)
+                            dst_from_null_to_tgt = abs(pos[0] - tgt_cur_pos[0]) + abs(pos[1] - tgt_cur_pos[1])
                             if pos in dst_penalty_dct.keys():
                                 dst_penalty_dct[pos] = max(
-                                    dst_penalty_dct[pos],                        
+                                    dst_penalty_dct[pos],
                                     dst_from_null_to_tgt
                                 )
                             else:
@@ -426,9 +426,9 @@ class PHANS:
                     # For null agents from the target's current position to the goal:
                     for pos in self.tgt_ag_path_lst[i_tgt_ag][tgt_idx_on_tgt_ag_path:]:
                         dst_to_goal = (
-                            len(self.tgt_ag_path_lst[i_tgt_ag])
-                            - self.tgt_ag_path_lst[i_tgt_ag].index(pos)
-                            - 1
+                                len(self.tgt_ag_path_lst[i_tgt_ag])
+                                - self.tgt_ag_path_lst[i_tgt_ag].index(pos)
+                                - 1
                         )
                         if dst_from_bag_to_goal < dst_to_goal:
                             tgt_preserved_pos.append(pos)
@@ -440,14 +440,17 @@ class PHANS:
                 ]
 
                 if len(tmp_available_null_ags_pos_lst) > 0:
-                    dst_penalty_array = np.array(
-                        [dst_penalty_dct.get(pos, 0) for pos in tmp_available_null_ags_pos_lst]
-                    )
-                    distances = (
-                        np.abs(np.array(tmp_available_null_ags_pos_lst) - np.array(bag_pos))
-                        .sum(axis=1)
-                    ) + dst_penalty_array
-                    min_index = np.argmin(distances)
+                    # Simple distance computation with penalties
+                    distances = []
+                    for null_pos in tmp_available_null_ags_pos_lst:
+                        # Manhattan distance
+                        dist = abs(null_pos[0] - bag_pos[0]) + abs(null_pos[1] - bag_pos[1])
+                        # Add penalty if exists
+                        if null_pos in dst_penalty_dct:
+                            dist += dst_penalty_dct[null_pos]
+                        distances.append(dist)
+                    
+                    min_index = distances.index(min(distances))
                     pos = tmp_available_null_ags_pos_lst[min_index]
                     selected_null_ags_pos_lst.append(pos)
                     available_null_ags_pos_lst.remove(pos)
@@ -481,10 +484,10 @@ class PHANS:
                         tgt_preserved_pos += [
                             pos
                             for pos in self.tgt_ag_path_lst[i_tgt_ag][
-                                self.tgt_cur_steps[i_tgt_ag] : self.tgt_ag_path_lst[
-                                    i_tgt_ag
-                                ].index(ag["goal"])
-                            ]
+                                       self.tgt_cur_steps[i_tgt_ag]: self.tgt_ag_path_lst[
+                                           i_tgt_ag
+                                       ].index(ag["goal"])
+                                       ]
                         ]
 
                 env = self._create_search_algorithm(
@@ -494,7 +497,7 @@ class PHANS:
                     moving_obstacle_edges=[],
                     a_star_max_iter=10000
                 )
-                env.is_dst_add = False 
+                env.is_dst_add = False
                 solution = env.compute_solution()
                 mov_obss += [(s["x"], s["y"], s["t"]) for s in solution]
                 solution_dict_all.append(solution)
@@ -515,10 +518,10 @@ class PHANS:
                 ]:
                     tgt_ag_next_pos = self.tgt_ag_path_lst[i_tgt_ag][
                         self.tgt_cur_steps[i_tgt_ag] + 1
-                    ]
+                        ]
                     if (
-                        tgt_ag_next_pos not in ag_next_pos_lst
-                        and tgt_ag_next_pos not in ag_pre_pos_lst
+                            tgt_ag_next_pos not in ag_next_pos_lst
+                            and tgt_ag_next_pos not in ag_pre_pos_lst
                     ):
                         ag_pre_pos_lst.append(copy.deepcopy(ag_next_pos_lst[i_tgt_ag]))
                         ag_next_pos_lst[i_tgt_ag] = copy.deepcopy(tgt_ag_next_pos)
@@ -527,7 +530,7 @@ class PHANS:
                 # Move null agents by one step if possible
                 for i_null_ag in range(len(null_ags_path_lst)):
                     if len(null_ags_path_lst[i_null_ag]) > 1:
-                        # null_ag_pos_idx_lst_on_null_ag_path: 
+                        # null_ag_pos_idx_lst_on_null_ag_path:
                         #   indices where the null agent can be on its path.
                         #   Typically 0, but due to Manhattan distance selection,
                         #   it may differ (if it wasn't the nearest one).
@@ -535,7 +538,7 @@ class PHANS:
                             i
                             for i, pos in enumerate(null_ags_path_lst[i_null_ag])
                             if pos not in self.ag_cur_pos_lst[self.task_len:]
-                            and pos not in ag_next_pos_lst[self.task_len:]
+                               and pos not in ag_next_pos_lst[self.task_len:]
                         ]
 
                         if len(null_ag_pos_idx_lst_on_null_ag_path) > 0:
@@ -543,18 +546,18 @@ class PHANS:
                             null_ag_cur_pos = null_ags_path_lst[i_null_ag][null_ag_cur_pos_idx]
 
                             if (
-                                null_ag_cur_pos not in ag_next_pos_lst
-                                and null_ag_cur_pos_idx < len(null_ags_path_lst[i_null_ag]) - 1
+                                    null_ag_cur_pos not in ag_next_pos_lst
+                                    and null_ag_cur_pos_idx < len(null_ags_path_lst[i_null_ag]) - 1
                             ):
                                 null_ag_next_pos = null_ags_path_lst[i_null_ag][
                                     null_ag_cur_pos_idx + 1
-                                ]
+                                    ]
 
                                 # Move a null agent by swapping with the adjacent agent:
                                 #   |■|□|  -->  |□|■|
                                 if (
-                                    null_ag_next_pos in self.ag_cur_pos_lst
-                                    and null_ag_next_pos in ag_next_pos_lst
+                                        null_ag_next_pos in self.ag_cur_pos_lst
+                                        and null_ag_next_pos in ag_next_pos_lst
                                 ):
                                     ag_next_pos_lst[
                                         ag_next_pos_lst.index(null_ag_next_pos)
@@ -572,22 +575,22 @@ class PHANS:
             tgt_ags_cur_pos_lst = self.ag_cur_pos_lst[: self.task_len]
             for i_tgt_ag in [i for i in range(self.task_len) if i not in self.goal_ag_idx_lst]:
                 self.tgt_cur_steps[i_tgt_ag] = (
-                    len(self.tgt_ag_path_lst[i_tgt_ag])
-                    - self.tgt_ag_path_lst[i_tgt_ag][::-1].index(
-                        tgt_ags_cur_pos_lst[i_tgt_ag]
-                    )
-                    - 1
+                        len(self.tgt_ag_path_lst[i_tgt_ag])
+                        - self.tgt_ag_path_lst[i_tgt_ag][::-1].index(
+                    tgt_ags_cur_pos_lst[i_tgt_ag]
+                )
+                        - 1
                 )
             self._update_goal_ag()
 
         return all_path_lst
 
     def plot_animation(
-        self, 
-        animation_name: str, 
-        routes: list[list[tuple[int, int]]], 
-        small_env: bool = False,
-        slow_factor: int = 2
+            self,
+            animation_name: str,
+            routes: list[list[tuple[int, int]]],
+            small_env: bool = False,
+            slow_factor: int = 2
     ):
         """
         Draw an animation for the given routes and save as GIF.
@@ -597,7 +600,7 @@ class PHANS:
             routes (list[list[tuple[int, int]]]): Sequence of agent positions.
             slow_factor (int): Number of frames per move to interpolate.
         """
-        
+
         if small_env:
             fig, ax = plt.subplots(figsize=(4.0, 1.25))
         else:
@@ -612,12 +615,12 @@ class PHANS:
             ax.cla()
 
             tgt_color = ["red", "blue", "green", "steelblue", "deeppink", "brown", "orange",
-                        "purple", "olive", "cyan", "lime", "magenta", "yellow", "sandybrown"]
+                         "purple", "olive", "cyan", "lime", "magenta", "yellow", "sandybrown"]
 
             t = int(frame / slow_factor)
             if t >= len(routes):
                 t = len(routes) - 1
-                
+
             cur_pos_lst = [routes[t][i] for i in range(len(routes[t]))]
             if t < len(routes) - 1:
                 next_pos_lst = [routes[t + 1][i] for i in range(len(routes[t + 1]))]
@@ -638,12 +641,12 @@ class PHANS:
             for x in range(self.size_x):
                 for y in range(self.size_y):
                     if (x, y) in self.static_obss:
-                        ax.add_patch(plt.Rectangle((x-0.5, y-0.5), 1, 1, 
-                                                facecolor='black', alpha=0.3))
+                        ax.add_patch(plt.Rectangle((x - 0.5, y - 0.5), 1, 1,
+                                                   facecolor='black', alpha=0.3))
                     else:
-                        ax.add_patch(plt.Rectangle((x-0.5, y-0.5), 1, 1, 
-                                                facecolor='white', edgecolor='gray', 
-                                                alpha=0.3))
+                        ax.add_patch(plt.Rectangle((x - 0.5, y - 0.5), 1, 1,
+                                                   facecolor='white', edgecolor='gray',
+                                                   alpha=0.3))
 
             # Draw agents
             for i in range(len(routes[t])):
@@ -659,8 +662,8 @@ class PHANS:
                         zorder=3
                     )
                     # Add agent ID
-                    ax.text(mid_pos_lst[i][0], mid_pos_lst[i][1], str(i), 
-                        ha='center', va='center', fontsize=8, color='white', zorder=4)
+                    ax.text(mid_pos_lst[i][0], mid_pos_lst[i][1], str(i),
+                            ha='center', va='center', fontsize=8, color='white', zorder=4)
                 else:
                     # Other agents
                     ax.scatter(
@@ -693,7 +696,7 @@ class PHANS:
             ax.set(xticks=[], yticks=[])
             ax.tick_params(bottom=False, left=False, labelbottom=False, labelleft=False)
 
-            ax.set_title(f"Step: {t}/{len(routes)-1} | Agents: {len(routes[t])}", fontsize=10)
+            ax.set_title(f"Step: {t}/{len(routes) - 1} | Agents: {len(routes[t])}", fontsize=10)
 
             return ax
 
@@ -701,20 +704,16 @@ class PHANS:
             plt.subplots_adjust(left=0.005, right=0.52, bottom=0.01, top=0.8)
         else:
             plt.subplots_adjust(left=0.005, right=0.7, bottom=0.01, top=0.92)
-        
-        # Create animation
+
         ani = anm.FuncAnimation(
             fig, update, frames=min(len(routes) * slow_factor, 1000), interval=200, repeat=False
         )
-        
-        # Save as GIF using Pillow
+
         try:
-            writer = PillowWriter(fps=5)  # 5 frames per second
+            writer = PillowWriter(fps=5)  
             ani.save(animation_name, writer=writer, dpi=100)
             print(f"Animation successfully saved as {animation_name}")
         except Exception as e:
             print(f"Error saving animation: {e}")
-            # Fallback: save as PNG frames
-            self._save_frames_fallback(routes, animation_name.replace('.gif', '_frames'))
-        
+
         plt.close(fig)

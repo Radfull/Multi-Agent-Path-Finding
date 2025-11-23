@@ -60,7 +60,7 @@ class FocalSearchFollowingConflict():
             self._null_xy_array = None
 
     def _get_neighbors_lazy(self, state: State) -> list[State]:
-        """LAZY VERSION: Generate all possible neighbors without validation"""
+        """lazy: Generate all possible neighbors without validation"""
         neighbors = []
         
         # Generate all possible moves without checking validity
@@ -258,7 +258,7 @@ class FocalSearchFollowingConflict():
         step_cost = 1
 
         closed_set = set()
-        open_set = {initial_state2}
+        open_set = {initial_state}
 
         came_from = {}
 

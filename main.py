@@ -1,178 +1,11 @@
-from src.envs import eval_env1, eval_env2, eval_env3, eval_env4
-from timeit import default_timer as timer
-import matplotlib.pyplot as plt
-import numpy as np
-import os
-import json
+from src.plot_funcs import plot_alg_time_steps, run_a_star_vs_focal_density
 
-def run_density_experiment(search_type:str='a_star', weight:float=1.0):
-    '''search_type = ('focal', 'a_star', 'bi_a_star')'''
-    heuristics = ['manh', 'diagonal', 'euclid', 'weighted']
-    densities = list(range(10, 100, 10))
-    seeds = list(range(168, 174))
-    envs = [
-        ('env1', eval_env1),
-        ('env2', eval_env2),
-        ('env3', eval_env3),
-        ('env4', eval_env4)
-    ]
-    
-    results = {}
-    for env_name, env_func in envs:
-        results[env_name] = {}
-        for density in densities:
-            results[env_name][density] = {
-                heuristic: {'makespan': [], 'runtime': []} for heuristic in heuristics
-            }
-            for seed in seeds:
-                for heuristic in heuristics:
-                    start_time = timer()
-                    all_path_lst = env_func(search_type=search_type, used_dist=heuristic, seed=seed, density_percent=density, w = weight)
-                    elapsed = timer() - start_time
-                    makespan = len(all_path_lst)
-                    
-                    results[env_name][density][heuristic]['makespan'].append(makespan)
-                    results[env_name][density][heuristic]['runtime'].append(elapsed)
-                    
-                    print(f'{env_name} dens={density}% seed={seed} dist={heuristic}: steps={makespan}, runtime={elapsed:.4f}s')
-    
-    averages = {}
-    for env_name in results:
-        averages[env_name] = {}
-        for density in densities:
-            averages[env_name][density] = {}
-            for heuristic in heuristics:
-                makespan_avg = float(np.mean(results[env_name][density][heuristic]['makespan']))
-                runtime_avg = float(np.mean(results[env_name][density][heuristic]['runtime']))
-                averages[env_name][density][heuristic] = {
-                    'makespan': makespan_avg,
-                    'runtime': runtime_avg
-                }
-    
-    results_dir = 'results'
-    os.makedirs(results_dir, exist_ok=True)
-    output_path = os.path.join(results_dir, 'density_metrics.json')
-    payload = {
-        'heuristics': heuristics,
-        'densities': densities,
-        'seeds': seeds,
-        'raw_results': results,
-        'averages': averages
-    }
-    with open(output_path, 'w', encoding='utf-8') as f:
-        json.dump(payload, f, ensure_ascii=False, indent=2)
-    print(f'Density metrics saved to {output_path}')
-    
-    for env_name in results:
-        fig, ax = plt.subplots(figsize=(10, 6))
-        for heuristic in heuristics:
-            makespan_series = [averages[env_name][density][heuristic]['makespan'] for density in densities]
-            ax.plot(densities, makespan_series, marker='o', label=heuristic)
-        ax.set_xlabel('Environment density (%)', fontsize=12)
-        ax.set_ylabel('Average makespan (steps)', fontsize=12)
-        ax.set_title(f'{env_name.upper()} - Makespan vs Density', fontsize=14)
-        ax.grid(True, alpha=0.3)
-        ax.legend()
-        plt.tight_layout()
-        plt.savefig(f'{env_name}_makespan_vs_density.png', dpi=300, bbox_inches='tight')
-        print(f'Saved {env_name}_makespan_vs_density.png')
-        
-        fig, ax = plt.subplots(figsize=(10, 6))
-        for heuristic in heuristics:
-            runtime_series = [averages[env_name][density][heuristic]['runtime'] for density in densities]
-            ax.plot(densities, runtime_series, marker='o', label=heuristic)
-        ax.set_xlabel('Environment density (%)', fontsize=12)
-        ax.set_ylabel('Average runtime (s)', fontsize=12)
-        ax.set_title(f'{env_name.upper()} - Runtime vs Density', fontsize=14)
-        ax.grid(True, alpha=0.3)
-        ax.legend()
-        plt.tight_layout()
-        plt.savefig(f'{env_name}_runtime_vs_density.png', dpi=300, bbox_inches='tight')
-        print(f'Saved {env_name}_runtime_vs_density.png')
-    
-    plt.show()
-
-
-def plot_alg_time_steps(env_name: str, seeds: list[int], density_percent: list[float]):
-    env_map = {
-        'env1': eval_env1,
-        'env2': eval_env2,
-        'env3': eval_env3,
-        'env4': eval_env4
-    }
-    
-    if env_name not in env_map:
-        raise ValueError(f"Unknown environment name: {env_name}. Must be one of: {list(env_map.keys())}")
-    
-    eval_func = env_map[env_name]
-    
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 7))
-    
-    a_star_t, aw_star_t, focal_t = [], [], []
-    a_star, aw_star, focal = [], [], []
-    
-    for density in density_percent:
-        a_s, aw_s, f_s = 0, 0, 0
-        a_t, aw_t, f_t = 0.0, 0.0, 0.0
-        
-        for s in seeds:
-           
-            start = timer()
-            a_s += len(eval_func(search_type='a_star', density_percent=density, seed=s))
-            a_t += timer() - start
-            
-            start = timer()
-            aw_s += len(eval_func(search_type='a_star', density_percent=density, seed=s, w=3.0))
-            aw_t += timer() - start
-            
-            start = timer()
-            f_s += len(eval_func(search_type='focal', density_percent=density, seed=s, w=1.8))
-            f_t += timer() - start
-            
-            # start = timer()
-            # bi_s += len(eval_func(search_type='bi_a_star', density_percent=density, seed=s))
-            # bi_t += timer() - start
-        
-        a_star.append(a_s / len(seeds))
-        aw_star.append(aw_s / len(seeds))
-        focal.append(f_s / len(seeds))
-        # bi_star.append(bi_s / len(seeds))
-
-        a_star_t.append(a_t / len(seeds))
-        aw_star_t.append(aw_t / len(seeds))
-        focal_t.append(f_t / len(seeds))
-        # bi_star_t.append(bi_t / len(seeds))
-    
-    ax1.plot(density_percent, a_star, label='A*', marker='o')
-    ax1.plot(density_percent, aw_star, label='AW*', marker='s')
-    ax1.plot(density_percent, focal, label='Focal', marker='^')
-    # ax1.plot(density_percent, bi_star, label='Bi A*', marker='d')
-    
-    ax1.set_ylabel('Time Steps')
-    ax1.set_xlabel('Density (%)')
-    ax1.grid(True)
-    ax1.legend()
-    ax1.set_title('Time Steps vs Density')
-
-    ax2.plot(density_percent, a_star_t, label='A*', marker='o')
-    ax2.plot(density_percent, aw_star_t, label='AW*', marker='s')
-    ax2.plot(density_percent, focal_t, label='Focal', marker='^')
-    # ax2.plot(density_percent, bi_star_t, label='Bi A*', marker='d')
-    
-    ax2.set_ylabel('Execution Time (seconds)')
-    ax2.set_xlabel('Density (%)')
-    ax2.grid(True)
-    ax2.legend()
-    ax2.set_title('Execution Time vs Density')
-
-    plt.tight_layout()
-    plt.show()
 
 def main():
 
     # run_density_experiment(search_type='focal')
 
-    plot_alg_time_steps('env4',seeds = [1,2,3], density_percent = [10,20,30,40,50,60,70,80,90])
+    plot_alg_time_steps('env1',seeds = [1,2,3, 4, 5], density_percent = [10,20,30,40,50,60,70,80,90])
 
     # dists = ['manh', 'euclid', 'cheb','octile', 'mixed', 'weighted', 'diagonal']
     # best_counts = [0] * 6
@@ -185,7 +18,7 @@ def main():
     #     steps, times = [], []
     #     for d in dists:
     #         st = timer()
-    #         steps.append(len(eval_env2(used_dist=d, seed=s, plot=False, search_type='', w=3.0))) # 1.7 for focal
+    #         steps.append(len(eval_env1(used_dist=d, seed=s, plot=False, search_type='a_star', w=1.0))) # 1.7 for focal
     #         times.append(round(timer()-st,2))
     #     m = min(steps)
     #     m_t = min(times)
