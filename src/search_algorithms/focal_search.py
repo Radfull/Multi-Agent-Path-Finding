@@ -19,7 +19,7 @@ class FocalSearchFollowingConflict():
         is_dst_add: bool = True,
         considering_cycle_conflict: bool = True,
         used_dist: str = 'euclid',
-        w: float = 1.5,  # Weight for suboptimality bound
+        w: float = 1.5,  
     ):
         if moving_obstacles is None:
             moving_obstacles = []
@@ -48,15 +48,12 @@ class FocalSearchFollowingConflict():
         
         self.iter = 0
         
-        # Cache goal coordinates for faster heuristic computation
         self.goal_x = goal_state.location.x
         self.goal_y = goal_state.location.y
         
-        # Cache obstacles by time to avoid repeated computation
         self._obstacle_cache = {}
         self._obstacle_cache_max_size = 500
         
-        # Pre-compute null agent positions as numpy array if needed
         if self.is_dst_add and len(self.null_agent_pos_lst) > 0:
             self._null_xy_array = np.array(self.null_agent_pos_lst, dtype=np.int32)
         else:
@@ -261,7 +258,7 @@ class FocalSearchFollowingConflict():
         step_cost = 1
 
         closed_set = set()
-        open_set = {initial_state}
+        open_set = {initial_state2}
 
         came_from = {}
 

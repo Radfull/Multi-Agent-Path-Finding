@@ -94,15 +94,6 @@ def run_density_experiment(search_type:str='a_star', weight:float=1.0):
 
 
 def plot_alg_time_steps(env_name: str, seeds: list[int], density_percent: list[float]):
-    """
-    Plot comparison of different search algorithms across different densities.
-    
-    Args:
-        env_name: Environment name ('env1', 'env2', 'env3', or 'env4')
-        seeds: List of random seeds for averaging results
-        densities: List of density values (0.0 to 1.0) to test
-    """
-    # Select the appropriate eval function based on env_name
     env_map = {
         'env1': eval_env1,
         'env2': eval_env2,
@@ -115,15 +106,14 @@ def plot_alg_time_steps(env_name: str, seeds: list[int], density_percent: list[f
     
     eval_func = env_map[env_name]
     
-    # Create figure with subplots
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 7))
     
-    a_star_t, aw_star_t, focal_t, bi_star_t = [], [], [], []
-    a_star, aw_star, focal, bi_star = [], [], [], []
+    a_star_t, aw_star_t, focal_t = [], [], []
+    a_star, aw_star, focal = [], [], []
     
     for density in density_percent:
-        a_s, aw_s, f_s, bi_s = 0, 0, 0, 0
-        a_t, aw_t, f_t, bi_t = 0.0, 0.0, 0.0, 0.0
+        a_s, aw_s, f_s = 0, 0, 0
+        a_t, aw_t, f_t = 0.0, 0.0, 0.0
         
         for s in seeds:
            
@@ -139,26 +129,24 @@ def plot_alg_time_steps(env_name: str, seeds: list[int], density_percent: list[f
             f_s += len(eval_func(search_type='focal', density_percent=density, seed=s, w=1.8))
             f_t += timer() - start
             
-            start = timer()
-            bi_s += len(eval_func(search_type='bi_a_star', density_percent=density, seed=s))
-            bi_t += timer() - start
+            # start = timer()
+            # bi_s += len(eval_func(search_type='bi_a_star', density_percent=density, seed=s))
+            # bi_t += timer() - start
         
-        # Average over seeds
         a_star.append(a_s / len(seeds))
         aw_star.append(aw_s / len(seeds))
         focal.append(f_s / len(seeds))
-        bi_star.append(bi_s / len(seeds))
+        # bi_star.append(bi_s / len(seeds))
 
         a_star_t.append(a_t / len(seeds))
         aw_star_t.append(aw_t / len(seeds))
         focal_t.append(f_t / len(seeds))
-        bi_star_t.append(bi_t / len(seeds))
+        # bi_star_t.append(bi_t / len(seeds))
     
-    # Plot time steps
     ax1.plot(density_percent, a_star, label='A*', marker='o')
     ax1.plot(density_percent, aw_star, label='AW*', marker='s')
     ax1.plot(density_percent, focal, label='Focal', marker='^')
-    ax1.plot(density_percent, bi_star, label='Bi A*', marker='d')
+    # ax1.plot(density_percent, bi_star, label='Bi A*', marker='d')
     
     ax1.set_ylabel('Time Steps')
     ax1.set_xlabel('Density (%)')
@@ -166,11 +154,10 @@ def plot_alg_time_steps(env_name: str, seeds: list[int], density_percent: list[f
     ax1.legend()
     ax1.set_title('Time Steps vs Density')
 
-    # Plot execution time
     ax2.plot(density_percent, a_star_t, label='A*', marker='o')
     ax2.plot(density_percent, aw_star_t, label='AW*', marker='s')
     ax2.plot(density_percent, focal_t, label='Focal', marker='^')
-    ax2.plot(density_percent, bi_star_t, label='Bi A*', marker='d')
+    # ax2.plot(density_percent, bi_star_t, label='Bi A*', marker='d')
     
     ax2.set_ylabel('Execution Time (seconds)')
     ax2.set_xlabel('Density (%)')
@@ -185,21 +172,20 @@ def main():
 
     # run_density_experiment(search_type='focal')
 
-    plot_alg_time_steps('env3',seeds = [1,2,3,4,5], density_percent = [10,20,30,40,50,60,70,80,90])
+    plot_alg_time_steps('env4',seeds = [1,2,3], density_percent = [10,20,30,40,50,60,70,80,90])
 
-    # проверить 9 сид
     # dists = ['manh', 'euclid', 'cheb','octile', 'mixed', 'weighted', 'diagonal']
     # best_counts = [0] * 6
     # best_times = [0] * 6
     # print('1 env')
     # start_time = timer()
     
-    # for s in range(1,6):
+    # for s in range(1,11):
     #     print(str(s) + " / 10")
     #     steps, times = [], []
     #     for d in dists:
     #         st = timer()
-    #         steps.append(len(eval_env3(used_dist=d, seed=s, plot=False, search_type='a_star', w=1.0))) # 1.7 for focal
+    #         steps.append(len(eval_env2(used_dist=d, seed=s, plot=False, search_type='', w=3.0))) # 1.7 for focal
     #         times.append(round(timer()-st,2))
     #     m = min(steps)
     #     m_t = min(times)

@@ -17,7 +17,7 @@ class PHANS:
         size_y: int, 
         static_obstacles: list[tuple[int, int]] = None,
         used_dist:str = 'euclid',
-        search_type: str = 'a_star',  # 'a_star' or 'focal'
+        search_type: str = 'a_star',  # 'a_star', 'focal', 'bi_a_star'
         weight: float = 1.5     # Weight for focal search suboptimality bound
     ):
         """

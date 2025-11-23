@@ -163,7 +163,6 @@ class AStarFollowingConflict():
     def __chebyshev_dist(self, state:State, goal):
         return max(fabs(state.location.x - goal.location.x), fabs(state.location.y - goal.location.y))
     
-
     def __octile_dist(self, state:State, goal):
         dx = abs(state.location.x - goal.location.x)
         dy = abs(state.location.y - goal.location.y)
